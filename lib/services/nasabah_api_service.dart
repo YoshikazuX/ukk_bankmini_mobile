@@ -2,11 +2,15 @@ import '../core/constants/api_constants.dart';
 import '../core/network/api_client.dart';
 import '../core/network/api_response.dart';
 import '../core/storage/session_storage.dart';
+import '../models/badge_model.dart';
 import '../models/nasabah_model.dart';
+import '../models/notifikasi_model.dart';
+import '../models/saving_goal_model.dart';
+import '../models/session_model.dart';
 import '../models/transaksi_model.dart';
-import 'dummy_data_service.dart';
 
-/// Service API khusus untuk modul Nasabah / Siswa (Mobile Banking)
+/// Service API resmi untuk modul Nasabah / Siswa (Mobile Banking)
+/// Backend Laravel sebagai Single Source of Truth — Zero Dummy Data Runtime Policy
 class NasabahApiService {
   static final ApiClient _api = ApiClient.instance;
 
@@ -14,7 +18,7 @@ class NasabahApiService {
   // 1. DATA PROFIL NASABAH
   // =========================================================================
 
-  /// Mengambil data profil lengkap nasabah yang sedang login
+  /// Mengambil data profil lengkap nasabah yang sedang login dari server Laravel
   static Future<ApiResponse<NasabahModel>> getProfil() async {
     try {
       final response = await _api.get(ApiConstants.nasabahMe);
@@ -31,20 +35,15 @@ class NasabahApiService {
         return ApiResponse.success(data: nasabah, message: response.message);
       }
 
-      // Fallback ke cache atau dummy data jika server offline/error
-      final cached = SessionStorage.cachedNasabah ?? DummyDataService.getNasabah();
       return ApiResponse.error(
         message: response.message.isNotEmpty
             ? response.message
-            : 'Gagal memuat profil server, menggunakan data lokal.',
-        data: cached,
+            : 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
         statusCode: response.statusCode,
       );
     } catch (e) {
-      final cached = SessionStorage.cachedNasabah ?? DummyDataService.getNasabah();
       return ApiResponse.error(
-        message: 'Offline: Memuat data profil lokal.',
-        data: cached,
+        message: 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
       );
     }
   }
@@ -53,7 +52,7 @@ class NasabahApiService {
   // 2. CEK SALDO REAL-TIME
   // =========================================================================
 
-  /// Mengambil rincian saldo (total, mengendap, tersedia)
+  /// Mengambil rincian saldo aktual (total, mengendap, tersedia) langsung dari database
   static Future<ApiResponse<Map<String, dynamic>>> getSaldo() async {
     try {
       final response = await _api.get(ApiConstants.nasabahSaldo);
@@ -66,7 +65,7 @@ class NasabahApiService {
                     : response.data)
                 : <String, dynamic>{};
 
-        // Sinkronisasi saldo ke cached nasabah
+        // Sinkronisasi saldo ke cached nasabah lokal
         final currentNasabah = SessionStorage.cachedNasabah;
         if (currentNasabah != null && saldoData['saldo'] != null) {
           final newSaldo = (saldoData['saldo'] as num).toDouble();
@@ -77,29 +76,15 @@ class NasabahApiService {
         return ApiResponse.success(data: saldoData, message: response.message);
       }
 
-      // Fallback data lokal
-      final nasabah = SessionStorage.cachedNasabah ?? DummyDataService.getNasabah();
       return ApiResponse.error(
-        message: 'Server offline: Menampilkan saldo tersimpan.',
-        data: {
-          'saldo': nasabah.totalSaldo,
-          'saldo_mengendap': nasabah.saldoMengendap,
-          'saldo_tersedia': nasabah.saldoEfektif,
-          'no_rekening': nasabah.noRekening,
-          'nama_siswa': nasabah.namaLengkap,
-        },
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+        statusCode: response.statusCode,
       );
     } catch (e) {
-      final nasabah = SessionStorage.cachedNasabah ?? DummyDataService.getNasabah();
       return ApiResponse.error(
-        message: 'Offline: Menggunakan saldo lokal.',
-        data: {
-          'saldo': nasabah.totalSaldo,
-          'saldo_mengendap': nasabah.saldoMengendap,
-          'saldo_tersedia': nasabah.saldoEfektif,
-          'no_rekening': nasabah.noRekening,
-          'nama_siswa': nasabah.namaLengkap,
-        },
+        message: 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
       );
     }
   }
@@ -108,9 +93,9 @@ class NasabahApiService {
   // 3. RIWAYAT MUTASI TRANSAKSI
   // =========================================================================
 
-  /// Mengambil daftar riwayat transaksi mutasi
+  /// Mengambil daftar riwayat transaksi mutasi aktual dari backend
   static Future<ApiResponse<List<TransaksiModel>>> getRiwayat({
-    String? jenis, // 'setor', 'tarik', 'transfer_masuk', 'transfer_keluar', null
+    String? jenis, // 'setor', 'tarik', 'admin', 'koreksi_setor', 'koreksi_tarik'
   }) async {
     try {
       final queryParams = <String, dynamic>{};
@@ -140,15 +125,15 @@ class NasabahApiService {
         return ApiResponse.success(data: list, message: response.message);
       }
 
-      // Fallback lokal
       return ApiResponse.error(
-        message: 'Memuat transaksi lokal.',
-        data: DummyDataService.getTransaksiList(),
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+        statusCode: response.statusCode,
       );
     } catch (e) {
       return ApiResponse.error(
-        message: 'Offline: Memuat transaksi lokal.',
-        data: DummyDataService.getTransaksiList(),
+        message: 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
       );
     }
   }
@@ -157,7 +142,7 @@ class NasabahApiService {
   // 4. RINGKASAN PEMASUKAN & PENGELUARAN BULANAN
   // =========================================================================
 
-  /// Mengambil statistik masuk dan keluar bulan berjalan
+  /// Mengambil statistik masuk, keluar, dan agregasi 6 bulan dari backend
   static Future<ApiResponse<Map<String, dynamic>>> getRingkasan() async {
     try {
       final response = await _api.get(ApiConstants.nasabahRingkasan);
@@ -170,31 +155,24 @@ class NasabahApiService {
         return ApiResponse.success(data: map, message: response.message);
       }
 
-      // Fallback hitung lokal
       return ApiResponse.error(
-        message: 'Offline data ringkasan',
-        data: {
-          'total_masuk': 350000.0,
-          'total_keluar': 100000.0,
-          'saldo': DummyDataService.getNasabah().totalSaldo,
-        },
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+        statusCode: response.statusCode,
       );
     } catch (e) {
       return ApiResponse.error(
-        message: 'Offline data ringkasan',
-        data: {
-          'total_masuk': 350000.0,
-          'total_keluar': 100000.0,
-          'saldo': DummyDataService.getNasabah().totalSaldo,
-        },
+        message: 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
       );
     }
   }
 
   // =========================================================================
-  // 5. FITUR TRANSFER ANTAR SISWA TELAH DINONAKTIFKAN
+  // 5. FITUR TRANSFER ANTAR SISWA DINONAKTIFKAN
   // =========================================================================
-  /// Fitur transfer dinonaktifkan: transaksi keuangan hanya melalui loket teller
+
+  /// Fitur transfer dinonaktifkan demi perlindungan dana pelajar: transaksi tabungan melalui loket resmi
   static Future<ApiResponse<Map<String, dynamic>>> transfer({
     required String noRekeningTujuan,
     required double nominal,
@@ -202,28 +180,28 @@ class NasabahApiService {
     String? catatan,
   }) async {
     return ApiResponse.error(
-      message: 'Fitur transfer antar siswa dinonaktifkan. Transaksi tabungan dilayani melalui loket teller.',
+      message: 'Fitur transfer antar siswa dinonaktifkan. Transaksi tabungan dilayani secara aman melalui loket teller bank mini.',
     );
   }
 
   // =========================================================================
-  // 7. VERIFIKASI PIN OTORISASI
+  // 6. VERIFIKASI PIN OTORISASI
   // =========================================================================
 
-  /// Memverifikasi PIN transaksi 6-digit ke server
+  /// Memverifikasi PIN transaksi 6-digit ke server Laravel
   static Future<ApiResponse<bool>> verifyPin(String pin) async {
     final cleanPin = pin.trim();
     if (cleanPin.length != 6) {
       return ApiResponse.error(message: 'PIN harus tepat 6 digit');
     }
 
-    final nasabah = SessionStorage.cachedNasabah ?? DummyDataService.getNasabah();
+    final nasabah = SessionStorage.cachedNasabah;
 
     try {
       final response = await _api.post(
         ApiConstants.nasabahVerifyPin,
         data: {
-          'no_rekening': nasabah.noRekening,
+          if (nasabah != null) 'no_rekening': nasabah.noRekening,
           'pin': cleanPin,
         },
       );
@@ -232,32 +210,24 @@ class NasabahApiService {
         return ApiResponse.success(data: true, message: response.message);
       }
 
-      // Offline fallback
-      final isValid = DummyDataService.verifyPin(cleanPin);
-      if (isValid) {
-        return ApiResponse.success(data: true, message: 'Otorisasi PIN Valid (Offline)');
-      }
-
       return ApiResponse.error(
         message: response.message.isNotEmpty
             ? response.message
             : 'PIN otorisasi tidak valid!',
+        statusCode: response.statusCode,
       );
     } catch (e) {
-      // Offline fallback
-      final isValid = DummyDataService.verifyPin(cleanPin);
-      if (isValid) {
-        return ApiResponse.success(data: true, message: 'Otorisasi PIN Valid (Offline)');
-      }
-      return ApiResponse.error(message: 'PIN Keamanan salah!');
+      return ApiResponse.error(
+        message: 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+      );
     }
   }
 
   // =========================================================================
-  // 8. PAYLOAD QRIS / KARTU DIGITAL
+  // 7. PAYLOAD QRIS / KARTU DIGITAL
   // =========================================================================
 
-  /// Mengambil data payload QR Code rekening untuk ditunjukkan ke loket Teller
+  /// Mengambil data payload QR Code rekening langsung dari server backend
   static Future<ApiResponse<Map<String, dynamic>>> getQrisPayload() async {
     try {
       final response = await _api.get(ApiConstants.nasabahQrisPayload);
@@ -271,16 +241,374 @@ class NasabahApiService {
       }
     } catch (_) {}
 
-    final nasabah = SessionStorage.cachedNasabah ?? DummyDataService.getNasabah();
-    final payload =
-        'BANKMINI:REK:${nasabah.noRekening}:NIS:${nasabah.nis}:NAMA:${nasabah.namaLengkap}';
+    final nasabah = SessionStorage.cachedNasabah;
+    if (nasabah != null) {
+      final payload =
+          'BANKMINI:REK:${nasabah.noRekening}:NIS:${nasabah.nis}:NAMA:${nasabah.namaLengkap}';
 
-    return ApiResponse.success(data: {
-      'no_rekening': nasabah.noRekening,
-      'nama_siswa': nasabah.namaLengkap,
-      'nis': nasabah.nis,
-      'kelas': nasabah.kelas,
-      'qr_string': payload,
-    });
+      return ApiResponse.success(data: {
+        'no_rekening': nasabah.noRekening,
+        'nama_siswa': nasabah.namaLengkap,
+        'nis': nasabah.nis,
+        'kelas': nasabah.kelas,
+        'qr_string': payload,
+      });
+    }
+
+    return ApiResponse.error(
+      message: 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+    );
+  }
+
+  // =========================================================================
+  // 8. EMERGENCY ACCOUNT FREEZE (BLOKIR REKENING MANDIRI)
+  // =========================================================================
+
+  /// Membekukan rekening siswa secara mandiri demi keamanan
+  static Future<ApiResponse<Map<String, dynamic>>> emergencyFreeze({
+    String? alasan,
+  }) async {
+    try {
+      final response = await _api.post(
+        ApiConstants.nasabahEmergencyFreeze,
+        data: alasan != null ? {'alasan': alasan} : null,
+      );
+
+      if (response.success && response.data != null) {
+        final Map<String, dynamic> map = response.data is Map<String, dynamic>
+            ? (response.data['data'] is Map<String, dynamic>
+                ? response.data['data']
+                : response.data)
+            : <String, dynamic>{};
+
+        // Sinkronisasi status di cache sesi
+        final currentNasabah = SessionStorage.cachedNasabah;
+        if (currentNasabah != null) {
+          final updated = currentNasabah.copyWith(status: 'NONAKTIF');
+          await SessionStorage.saveCachedNasabah(updated);
+        }
+
+        return ApiResponse.success(
+          data: map,
+          message: response.message.isNotEmpty
+              ? response.message
+              : 'Rekening Anda berhasil dibekukan secara mandiri.',
+        );
+      }
+
+      return ApiResponse.error(
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Gagal membekukan rekening.',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+      );
+    }
+  }
+
+  // =========================================================================
+  // 9. LENCANA PRESTASI MENABUNG (BADGES GAMIFICATION)
+  // =========================================================================
+
+  /// Mengambil daftar evaluasi lencana menabung langsung dari backend
+  static Future<ApiResponse<List<BadgeModel>>> getBadges() async {
+    try {
+      final response = await _api.get(ApiConstants.nasabahBadges);
+
+      if (response.success && response.data != null) {
+        List<dynamic> rawList = [];
+        if (response.data is Map<String, dynamic> &&
+            response.data['data'] is List) {
+          rawList = response.data['data'];
+        } else if (response.data is List) {
+          rawList = response.data;
+        }
+
+        final List<BadgeModel> list = rawList.map((item) {
+          final m = Map<String, dynamic>.from(item);
+          DateTime? unlockedAt;
+          if (m['unlocked_at'] != null) {
+            unlockedAt = DateTime.tryParse(m['unlocked_at'].toString());
+          }
+          return BadgeModel(
+            id: m['id']?.toString() ?? '',
+            nama: m['nama']?.toString() ?? '',
+            deskripsi: m['deskripsi']?.toString() ?? '',
+            icon: m['icon']?.toString() ?? 'military_tech',
+            tier: m['tier']?.toString() ?? 'bronze',
+            isUnlocked: m['is_unlocked'] == true,
+            unlockedAt: unlockedAt,
+          );
+        }).toList();
+
+        return ApiResponse.success(data: list, message: response.message);
+      }
+
+      return ApiResponse.error(
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+      );
+    }
+  }
+
+  // =========================================================================
+  // 10. RIWAYAT SESI LOGIN (SESSION LOGS)
+  // =========================================================================
+
+  /// Mengambil log sesi perangkat aktif dari backend
+  static Future<ApiResponse<List<SessionModel>>> getSessionLogs() async {
+    try {
+      final response = await _api.get(ApiConstants.nasabahSessions);
+
+      if (response.success && response.data != null) {
+        List<dynamic> rawList = [];
+        if (response.data is Map<String, dynamic> &&
+            response.data['data'] is List) {
+          rawList = response.data['data'];
+        } else if (response.data is List) {
+          rawList = response.data;
+        }
+
+        final List<SessionModel> list = rawList.map((item) {
+          final m = Map<String, dynamic>.from(item);
+          DateTime lastAccess = DateTime.now();
+          if (m['last_access'] != null) {
+            lastAccess = DateTime.tryParse(m['last_access'].toString()) ?? DateTime.now();
+          }
+          return SessionModel(
+            id: m['id']?.toString() ?? '',
+            deviceName: m['device_name']?.toString() ?? 'Aplikasi Mobile',
+            deviceType: m['device_type']?.toString() ?? 'mobile',
+            ipAddress: m['ip_address']?.toString() ?? '',
+            location: m['location']?.toString() ?? '',
+            lastAccess: lastAccess,
+            isCurrentSession: m['is_current_session'] == true,
+          );
+        }).toList();
+
+        return ApiResponse.success(data: list, message: response.message);
+      }
+
+      return ApiResponse.error(
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+      );
+    }
+  }
+
+  // =========================================================================
+  // 11. TARGET TABUNGAN IMPIAN (SAVING GOALS CRUD)
+  // =========================================================================
+
+  /// Mengambil daftar target tabungan dari server Laravel
+  static Future<ApiResponse<List<SavingGoalModel>>> getSavingGoals() async {
+    try {
+      final response = await _api.get(ApiConstants.nasabahGoals);
+
+      if (response.success && response.data != null) {
+        List<dynamic> rawList = [];
+        if (response.data is Map<String, dynamic> &&
+            response.data['data'] is List) {
+          rawList = response.data['data'];
+        } else if (response.data is List) {
+          rawList = response.data;
+        }
+
+        final List<SavingGoalModel> list = rawList.map((item) {
+          final m = Map<String, dynamic>.from(item);
+          DateTime? createdAt;
+          if (m['created_at'] != null) {
+            createdAt = DateTime.tryParse(m['created_at'].toString());
+          }
+          DateTime? deadline;
+          if (m['deadline'] != null) {
+            deadline = DateTime.tryParse(m['deadline'].toString());
+          }
+
+          return SavingGoalModel(
+            id: m['id']?.toString() ?? '',
+            nama: m['nama']?.toString() ?? '',
+            targetAmount: (m['target_amount'] as num?)?.toDouble() ?? 0.0,
+            currentAmount: (m['current_amount'] as num?)?.toDouble() ?? 0.0,
+            icon: m['icon']?.toString(),
+            createdAt: createdAt,
+            deadline: deadline,
+            isCompleted: m['is_completed'] == true,
+          );
+        }).toList();
+
+        return ApiResponse.success(data: list, message: response.message);
+      }
+
+      return ApiResponse.error(
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+      );
+    }
+  }
+
+  /// Membuat target tabungan impian baru ke server
+  static Future<ApiResponse<SavingGoalModel>> createSavingGoal({
+    required String nama,
+    required double targetAmount,
+    double? currentAmount,
+    String? icon,
+    DateTime? deadline,
+  }) async {
+    try {
+      final response = await _api.post(
+        ApiConstants.nasabahGoals,
+        data: {
+          'nama': nama,
+          'target_amount': targetAmount,
+          'current_amount': currentAmount ?? 0,
+          'icon': icon ?? 'savings',
+          if (deadline != null) 'deadline': deadline.toIso8601String().substring(0, 10),
+        },
+      );
+
+      if (response.success && response.data != null) {
+        final Map<String, dynamic> m = response.data is Map<String, dynamic>
+            ? (response.data['data'] is Map<String, dynamic>
+                ? response.data['data']
+                : response.data)
+            : <String, dynamic>{};
+
+        DateTime? dl;
+        if (m['deadline'] != null) {
+          dl = DateTime.tryParse(m['deadline'].toString());
+        }
+
+        final goal = SavingGoalModel(
+          id: m['id']?.toString() ?? '',
+          nama: m['nama']?.toString() ?? nama,
+          targetAmount: (m['target_amount'] as num?)?.toDouble() ?? targetAmount,
+          currentAmount: (m['current_amount'] as num?)?.toDouble() ?? (currentAmount ?? 0),
+          icon: m['icon']?.toString() ?? icon,
+          deadline: dl,
+          isCompleted: m['is_completed'] == true,
+        );
+
+        return ApiResponse.success(data: goal, message: response.message);
+      }
+
+      return ApiResponse.error(
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Gagal membuat target tabungan.',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+      );
+    }
+  }
+
+  /// Menghapus target tabungan dari server
+  static Future<ApiResponse<bool>> deleteSavingGoal(String id) async {
+    try {
+      final response = await _api.delete(ApiConstants.nasabahGoalDetail(id));
+      if (response.success) {
+        return ApiResponse.success(data: true, message: response.message);
+      }
+      return ApiResponse.error(
+        message: response.message.isNotEmpty ? response.message : 'Gagal menghapus target.',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+      );
+    }
+  }
+
+  // =========================================================================
+  // 12. PUSAT NOTIFIKASI UNIVERSAL
+  // =========================================================================
+
+  /// Mengambil daftar notifikasi pengguna dari server
+  static Future<ApiResponse<List<NotifikasiModel>>> getNotifications() async {
+    try {
+      final response = await _api.get(ApiConstants.notifikasi);
+
+      if (response.success && response.data != null) {
+        List<dynamic> rawList = [];
+        if (response.data is Map<String, dynamic> &&
+            response.data['data'] is List) {
+          rawList = response.data['data'];
+        } else if (response.data is List) {
+          rawList = response.data;
+        }
+
+        final List<NotifikasiModel> list = rawList.map((item) {
+          final m = Map<String, dynamic>.from(item);
+          DateTime ts = DateTime.now();
+          if (m['timestamp'] != null) {
+            ts = DateTime.tryParse(m['timestamp'].toString()) ?? DateTime.now();
+          }
+
+          return NotifikasiModel(
+            id: m['id']?.toString() ?? '',
+            title: m['title']?.toString() ?? 'Pemberitahuan Bank Mini',
+            message: m['message']?.toString() ?? '',
+            jenis: m['type']?.toString() ?? 'SISTEM',
+            timestamp: ts,
+            isRead: m['is_read'] == true,
+          );
+        }).toList();
+
+        return ApiResponse.success(data: list, message: response.message);
+      }
+
+      return ApiResponse.error(
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+      );
+    }
+  }
+
+  /// Menandai seluruh notifikasi telah dibaca
+  static Future<ApiResponse<bool>> markAllNotificationsRead() async {
+    try {
+      final response = await _api.post(ApiConstants.notifikasiReadAll);
+      if (response.success) {
+        return ApiResponse.success(data: true, message: response.message);
+      }
+      return ApiResponse.error(
+        message: response.message.isNotEmpty ? response.message : 'Gagal menandai notifikasi.',
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Server Bank Mini tidak dapat dihubungi.',
+      );
+    }
   }
 }

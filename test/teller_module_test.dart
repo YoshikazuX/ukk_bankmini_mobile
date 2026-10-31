@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ukk_bankmini/core/storage/session_storage.dart';
 import 'package:ukk_bankmini/services/teller_api_service.dart';
+import 'test_api_mock_interceptor.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -9,6 +10,7 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     await SessionStorage.init();
+    TestApiMockInterceptor.install();
   });
 
   group('Tahap 5: Modul Teller POS & Operasional Loket Tests', () {
@@ -125,4 +127,3 @@ void main() {
     });
   });
 }
-

@@ -3,10 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/storage/session_storage.dart';
 import '../core/theme/app_theme.dart';
 import '../core/utils/helpers.dart';
+import '../services/nasabah_api_service.dart';
 import '../widgets/common/app_buttons.dart';
 import '../widgets/common/app_states.dart';
 
 /// Halaman Blokir Rekening Darurat (Emergency Account Freeze)
+/// Mengikuti SOP-09 & PRD FR-27: Nasabah dapat membekukan rekening mandiri via API,
+/// namun pembukaan blokir wajib melalui Administrator / Petugas Bank Mini Sekolah.
 class BlokirRekeningScreen extends StatefulWidget {
   const BlokirRekeningScreen({super.key});
 
@@ -24,37 +27,128 @@ class _BlokirRekeningScreenState extends State<BlokirRekeningScreen> {
     _isBlocked = SessionStorage.cachedNasabah?.isBlocked ?? false;
   }
 
-  Future<void> _toggleBlock() async {
-    final title = _isBlocked ? 'Konfirmasi Buka Blokir Rekening' : 'Konfirmasi Blokir Rekening Darurat';
-    final message = _isBlocked
-        ? 'Rekening akan diaktifkan kembali. Anda dapat melakukan penarikan dan transaksi tunai di loket seperti biasa.'
-        : 'Rekening akan dibekukan sementara. Seluruh penarikan tunai di loket Teller akan ditolak sampai Anda mengaktifkannya kembali.';
-
+  Future<void> _freezeAccount() async {
     final confirmed = await ConfirmationDialog.show(
       context,
-      title: title,
-      message: message,
-      confirmLabel: _isBlocked ? 'Buka Blokir Rekening' : 'Blokir Rekening Sekarang',
-      isDanger: !_isBlocked,
+      title: 'Konfirmasi Blokir Rekening Darurat',
+      message:
+          'Rekening akan dibekukan sementara di sistem pusat backend. Seluruh penarikan tunai di loket Teller akan ditolak sampai rekening diaktifkan kembali oleh Administrator Bank Mini.',
+      confirmLabel: 'Blokir Rekening Sekarang',
+      isDanger: true,
     );
 
     if (confirmed != true) return;
 
     setState(() => _isProcessing = true);
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
 
-    setState(() {
-      _isBlocked = !_isBlocked;
-      _isProcessing = false;
-    });
+    try {
+      final res = await NasabahApiService.emergencyFreeze(
+        alasan: 'Pemblokiran mandiri via Mobile App (Kehilangan kartu/QR)',
+      );
 
-    showAppSnackbar(
-      context,
-      _isBlocked
-          ? 'Rekening berhasil dibekukan untuk keamanan!'
-          : 'Rekening berhasil dibuka kembali!',
-      isError: _isBlocked,
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+
+      if (res.success) {
+        setState(() {
+          _isBlocked = true;
+        });
+
+        // Update cached nasabah state to NONAKTIF
+        final cached = SessionStorage.cachedNasabah;
+        if (cached != null) {
+          final updated = cached.copyWith(status: 'NONAKTIF');
+          await SessionStorage.saveNasabah(updated);
+        }
+
+        if (!mounted) return;
+        showAppSnackbar(
+          context,
+          'Rekening berhasil dibekukan untuk keamanan! Transaksi penarikan telah dinonaktifkan.',
+          isError: true,
+        );
+      } else {
+        showAppSnackbar(
+          context,
+          res.message.isNotEmpty
+              ? res.message
+              : 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+          isError: true,
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+      showAppSnackbar(
+        context,
+        'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+        isError: true,
+      );
+    }
+  }
+
+  void _showUnfreezeInfo() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.border),
+        ),
+        title: Row(
+          children: [
+            const Icon(
+              Icons.admin_panel_settings_outlined,
+              color: AppColors.primaryNavy,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Prosedur Buka Blokir',
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Sesuai Standar Operasional Prosedur SOP-09 Keamanan Perbankan Sekolah:\n\n'
+          '1. Rekening yang telah dibekukan darurat tidak dapat dibuka kembali secara mandiri di aplikasi.\n'
+          '2. Siswa pemilik rekening wajib hadir langsung ke loket Bank Mini SMK Negeri 1 Bantul.\n'
+          '3. Tunjukkan Kartu Pelajar asli dan sebutkan NIS kepada Administrator Bank Mini untuk verifikasi identitas.\n'
+          '4. Administrator akan membuka blokir melalui modul Back-Office Bank Mini.',
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: AppColors.textSecondary,
+            height: 1.45,
+          ),
+        ),
+        actions: [
+          PrimaryButton(
+            text: 'Hubungi Admin via WA',
+            icon: Icons.chat_outlined,
+            onPressed: () {
+              Navigator.pop(ctx);
+              openWhatsAppAdmin(context: context);
+            },
+          ),
+          const SizedBox(height: 6),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Tutup',
+              style: GoogleFonts.inter(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -86,14 +180,23 @@ class _BlokirRekeningScreenState extends State<BlokirRekeningScreen> {
               const SizedBox(height: 16),
 
               // Action Button
-              PrimaryButton(
-                text: _isBlocked ? 'Buka Blokir Rekening' : 'Blokir Rekening Sekarang',
-                icon: _isBlocked ? Icons.lock_open_rounded : Icons.shield_rounded,
-                backgroundColor: _isBlocked ? AppColors.success : AppColors.danger,
-                textColor: Colors.white,
-                isLoading: _isProcessing,
-                onPressed: _isProcessing ? null : _toggleBlock,
-              ),
+              if (!_isBlocked)
+                PrimaryButton(
+                  text: 'Blokir Rekening Sekarang',
+                  icon: Icons.shield_rounded,
+                  backgroundColor: AppColors.danger,
+                  textColor: Colors.white,
+                  isLoading: _isProcessing,
+                  onPressed: _isProcessing ? null : _freezeAccount,
+                )
+              else
+                PrimaryButton(
+                  text: 'Ajukan Buka Blokir ke Petugas',
+                  icon: Icons.support_agent_rounded,
+                  backgroundColor: AppColors.primaryNavy,
+                  textColor: Colors.white,
+                  onPressed: _showUnfreezeInfo,
+                ),
               const SizedBox(height: 20),
 
               // Info Section
@@ -113,7 +216,9 @@ class _BlokirRekeningScreenState extends State<BlokirRekeningScreen> {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _isBlocked ? AppColors.danger.withValues(alpha: 0.3) : AppColors.border,
+          color: _isBlocked
+              ? AppColors.danger.withValues(alpha: 0.3)
+              : AppColors.border,
         ),
       ),
       child: Column(
@@ -122,7 +227,8 @@ class _BlokirRekeningScreenState extends State<BlokirRekeningScreen> {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: (_isBlocked ? AppColors.danger : AppColors.success).withValues(alpha: 0.1),
+              color: (_isBlocked ? AppColors.danger : AppColors.success)
+                  .withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -144,8 +250,8 @@ class _BlokirRekeningScreenState extends State<BlokirRekeningScreen> {
           const SizedBox(height: 6),
           Text(
             _isBlocked
-                ? 'Rekening Anda sedang dibekukan sementara. Transaksi penarikan uang di loket tidak dapat dilakukan.'
-                : 'Rekening Anda dalam kondisi aktif & normal. Seluruh transaksi setor dan tarik tunai dapat dilakukan.',
+                ? 'Rekening Anda telah dibekukan sementara di database Bank Mini. Seluruh transaksi penarikan tunai di loket teller ditolak secara otomatis untuk melindungi simpanan Anda.'
+                : 'Rekening Anda dalam kondisi aktif & normal. Seluruh transaksi setor dan tarik tunai dapat dilakukan di loket Teller.',
             style: GoogleFonts.inter(
               fontSize: 12,
               color: AppColors.textSecondary,
@@ -178,7 +284,7 @@ class _BlokirRekeningScreenState extends State<BlokirRekeningScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Informasi Protokol Keamanan',
+                'Informasi Protokol Keamanan (SOP-09)',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -194,15 +300,15 @@ class _BlokirRekeningScreenState extends State<BlokirRekeningScreen> {
           ),
           _infoItem(
             Icons.block_outlined,
-            'Selama status rekening diblokir, transaksi penarikan di loket teller manapun akan otomatis ditolak oleh sistem.',
+            'Selama status rekening diblokir, transaksi penarikan di loket teller manapun akan otomatis ditolak oleh sistem perbankan.',
           ),
           _infoItem(
             Icons.savings_outlined,
-            'Setoran tunai tetap dapat diterima agar tabungan Anda tetap aman bertambah.',
+            'Setoran tabungan tetap dapat diterima oleh loket Teller agar tabungan Anda tetap aman bertambah.',
           ),
           _infoItem(
             Icons.support_agent_outlined,
-            'Hubungi Administrator Bank Mini jika memerlukan bantuan pemulihan akses kartu atau akun Anda.',
+            'Kunjungi loket Administrator Bank Mini Sekolah dengan membawa Kartu Pelajar fisik jika ingin mengaktifkan kembali rekening Anda.',
           ),
         ],
       ),

@@ -75,7 +75,7 @@ class PageHeader extends StatelessWidget {
                 ],
               ),
             ),
-            if (actions != null) ...actions!,
+            ...?actions,
           ],
         ),
       ),
@@ -143,6 +143,80 @@ class EmptyState extends StatelessWidget {
                 text: actionLabel!,
                 onPressed: onAction,
                 width: 160,
+                height: 38,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Error State Bersih dengan Pesan & Tombol Coba Lagi
+class ErrorState extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String message;
+  final String retryLabel;
+  final VoidCallback? onRetry;
+
+  const ErrorState({
+    super.key,
+    this.icon = Icons.wifi_off_rounded,
+    this.title = 'Terjadi Kesalahan',
+    required this.message,
+    this.retryLabel = 'Coba Lagi',
+    this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppColors.danger.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.danger.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Icon(icon, size: 28, color: AppColors.danger),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              message,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 18),
+              PrimaryButton(
+                text: retryLabel,
+                icon: Icons.refresh_rounded,
+                onPressed: onRetry,
+                width: 150,
                 height: 38,
               ),
             ],

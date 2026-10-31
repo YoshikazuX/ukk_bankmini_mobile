@@ -6,6 +6,7 @@ import 'package:ukk_bankmini/models/petugas_model.dart';
 import 'package:ukk_bankmini/screens/admin/admin_main_screen.dart';
 import 'package:ukk_bankmini/screens/supervisor/supervisor_main_screen.dart';
 import 'package:ukk_bankmini/services/supervisor_api_service.dart';
+import 'test_api_mock_interceptor.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,7 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     await SessionStorage.init();
+    TestApiMockInterceptor.install();
   });
 
   group('Tahap 6: Modul Supervisor & Admin Tests', () {
@@ -195,4 +197,3 @@ void main() {
     });
   });
 }
-

@@ -7,6 +7,7 @@ import '../services/nasabah_api_service.dart';
 import '../widgets/common/app_states.dart';
 
 /// Halaman Notifikasi Transaksi Real-Time (In-App Transaction Alert)
+/// Menggunakan Backend Laravel API sebagai Single Source of Truth
 class NotifikasiScreen extends StatefulWidget {
   const NotifikasiScreen({super.key});
 
@@ -18,53 +19,57 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
   List<NotifikasiModel> _notifikasi = [];
   String _selectedFilter = 'SEMUA';
   bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _loadLiveNotifications();
+    _loadNotifications();
   }
 
-  Future<void> _loadLiveNotifications() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadNotifications() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     try {
-      final res = await NasabahApiService.getRiwayat();
-      if (res.data != null && mounted) {
-        final List<NotifikasiModel> list = [];
-        for (final trx in res.data!) {
-          final jenis = trx.isSetoran ? 'SETORAN' : 'PENARIKAN';
-          final title = trx.isSetoran ? 'Setoran Berhasil' : 'Penarikan Berhasil';
-          String msg = '${trx.displayBadge}: ${formatRupiah(trx.jumlah)} pada ${trx.formattedTanggal}.';
-          if (trx.keterangan != null && trx.keterangan!.isNotEmpty) {
-            msg += ' (${trx.keterangan})';
-          }
-          list.add(
-            NotifikasiModel(
-              id: trx.id,
-              title: title,
-              message: msg,
-              jenis: jenis,
-              timestamp: trx.tanggal,
-              isRead: true,
-            ),
-          );
-        }
+      final res = await NasabahApiService.getNotifications();
+      if (!mounted) return;
+
+      if (res.success && res.data != null) {
         setState(() {
-          _notifikasi = list;
+          _notifikasi = res.data!;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = res.message.isNotEmpty
+              ? res.message
+              : 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.';
+          _isLoading = false;
         });
       }
     } catch (_) {
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (!mounted) return;
+      setState(() {
+        _errorMessage =
+            'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.';
+        _isLoading = false;
+      });
     }
   }
 
-  void _markAllRead() {
+  Future<void> _markAllRead() async {
     setState(() {
       for (var n in _notifikasi) {
         n.isRead = true;
       }
     });
+
+    try {
+      await NasabahApiService.markAllNotificationsRead();
+    } catch (_) {}
   }
 
   @override
@@ -74,7 +79,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
     final filteredNotif = _notifikasi.where((n) {
       if (_selectedFilter == 'SEMUA') return true;
       if (_selectedFilter == 'TRANSAKSI') {
-        return n.jenis == 'SETORAN' || n.jenis == 'PENARIKAN';
+        return n.jenis == 'SETORAN' ||
+            n.jenis == 'PENARIKAN' ||
+            n.jenis == 'TRANSAKSI';
       }
       if (_selectedFilter == 'KEAMANAN') {
         return n.jenis == 'KEAMANAN' || n.jenis == 'SYSTEM';
@@ -86,87 +93,113 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          'Pemberitahuan',
+          'Pemberitahuan Transaksi',
           style: GoogleFonts.inter(
             fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
           ),
         ),
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.primaryNavy,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+            tooltip: 'Segarkan',
+            onPressed: _loadNotifications,
+          ),
           if (unreadCount > 0)
             TextButton.icon(
               onPressed: _markAllRead,
-              icon: const Icon(Icons.done_all_rounded, size: 16, color: AppColors.primaryTeal),
+              icon: const Icon(Icons.done_all_rounded,
+                  size: 16, color: AppColors.accentTeal),
               label: Text(
                 'Tandai Dibaca',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.primaryTeal,
+                  color: AppColors.accentTeal,
                 ),
               ),
             ),
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            height: 1,
-            color: AppColors.border,
+      ),
+      body: SafeArea(
+        child: RefreshIndicator(
+          color: AppColors.primaryNavy,
+          onRefresh: _loadNotifications,
+          child: Column(
+            children: [
+              // Filter Tabs
+              Container(
+                color: AppColors.surface,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    _filterChip('SEMUA', 'Semua (${_notifikasi.length})'),
+                    const SizedBox(width: 8),
+                    _filterChip('TRANSAKSI', 'Transaksi'),
+                    const SizedBox(width: 8),
+                    _filterChip('KEAMANAN', 'Keamanan & Sistem'),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, thickness: 1, color: AppColors.border),
+
+              // Notification List
+              Expanded(
+                child: _isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primaryNavy,
+                          strokeWidth: 2.5,
+                        ),
+                      )
+                    : _errorMessage != null
+                        ? SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: Container(
+                              padding: const EdgeInsets.all(24),
+                              alignment: Alignment.center,
+                              child: ErrorState(
+                                title: 'Gagal Memuat Notifikasi',
+                                message: _errorMessage!,
+                                onRetry: _loadNotifications,
+                              ),
+                            ),
+                          )
+                        : filteredNotif.isEmpty
+                            ? SingleChildScrollView(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                child: Container(
+                                  padding: const EdgeInsets.all(40),
+                                  alignment: Alignment.center,
+                                  child: const EmptyState(
+                                    icon: Icons.notifications_none_rounded,
+                                    title: 'Tidak Ada Notifikasi',
+                                    message:
+                                        'Semua informasi dan notifikasi transaksi resmi akan muncul di sini.',
+                                  ),
+                                ),
+                              )
+                            : ListView.separated(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: const EdgeInsets.all(16),
+                                itemCount: filteredNotif.length,
+                                separatorBuilder: (_, index) =>
+                                    const SizedBox(height: 10),
+                                itemBuilder: (context, index) {
+                                  final notif = filteredNotif[index];
+                                  return _notifikasiCard(notif);
+                                },
+                              ),
+              ),
+            ],
           ),
         ),
-      ),
-      body: Column(
-        children: [
-          // Filter Tabs
-          Container(
-            color: AppColors.surface,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                _filterChip('SEMUA', 'Semua (${_notifikasi.length})'),
-                const SizedBox(width: 8),
-                _filterChip('TRANSAKSI', 'Transaksi'),
-                const SizedBox(width: 8),
-                _filterChip('KEAMANAN', 'Keamanan & Sistem'),
-              ],
-            ),
-          ),
-          const Divider(height: 1, thickness: 1, color: AppColors.border),
-
-          // Notification List
-          Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.primaryNavy,
-                      strokeWidth: 2.5,
-                    ),
-                  )
-                : filteredNotif.isEmpty
-                    ? const EmptyState(
-                        icon: Icons.notifications_none_rounded,
-                        title: 'Tidak Ada Notifikasi',
-                        message: 'Semua informasi dan notifikasi transaksi akan muncul di sini.',
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: filteredNotif.length,
-                        separatorBuilder: (_, index) => const SizedBox(height: 10),
-                        itemBuilder: (context, index) {
-                          final notif = filteredNotif[index];
-                          return _notifikasiCard(notif);
-                        },
-                      ),
-          ),
-        ],
       ),
     );
   }
@@ -196,7 +229,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
     );
   }
 
-  Widget _notifikasiCard(dynamic notif) {
+  Widget _notifikasiCard(NotifikasiModel notif) {
     IconData icon;
     Color color;
 
@@ -228,7 +261,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           color: notif.isRead ? AppColors.surface : const Color(0xFFF0FDF9),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: notif.isRead ? AppColors.border : AppColors.primaryTeal.withValues(alpha: 0.4),
+            color: notif.isRead
+                ? AppColors.border
+                : AppColors.primaryTeal.withValues(alpha: 0.4),
           ),
         ),
         child: Row(
@@ -256,7 +291,8 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                           notif.title,
                           style: GoogleFonts.inter(
                             fontSize: 13,
-                            fontWeight: notif.isRead ? FontWeight.w600 : FontWeight.w700,
+                            fontWeight:
+                                notif.isRead ? FontWeight.w600 : FontWeight.w700,
                             color: AppColors.textPrimary,
                           ),
                         ),

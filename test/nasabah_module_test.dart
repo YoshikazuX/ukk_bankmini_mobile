@@ -4,6 +4,7 @@ import 'package:ukk_bankmini/core/storage/session_storage.dart';
 import 'package:ukk_bankmini/models/nasabah_model.dart';
 import 'package:ukk_bankmini/models/transaksi_model.dart';
 import 'package:ukk_bankmini/services/nasabah_api_service.dart';
+import 'test_api_mock_interceptor.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +13,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await SessionStorage.init();
     await SessionStorage.clearSession();
+    TestApiMockInterceptor.install();
   });
 
   group('Tahap 4: Modul Nasabah & Live API Service Tests', () {
@@ -100,4 +102,3 @@ void main() {
     });
   });
 }
-

@@ -1,49 +1,67 @@
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_theme.dart';
 import '../core/utils/helpers.dart';
 import '../models/session_model.dart';
+import '../services/nasabah_api_service.dart';
 import '../widgets/common/app_cards.dart';
+import '../widgets/common/app_states.dart';
 
 /// Halaman Riwayat Sesi Login (Active Session & Device Log)
-class SessionLogScreen extends StatelessWidget {
+/// Menggunakan Backend Laravel Sanctum sebagai Single Source of Truth
+class SessionLogScreen extends StatefulWidget {
   const SessionLogScreen({super.key});
 
-  List<SessionModel> _getActiveDeviceSessions() {
-    String deviceType = 'web';
-    String deviceName = 'Web Browser (Sesi Aktif)';
-    if (!kIsWeb) {
-      if (Platform.isAndroid) {
-        deviceType = 'android';
-        deviceName = 'Android Device (Aplikasi Resmi)';
-      } else if (Platform.isIOS) {
-        deviceType = 'ios';
-        deviceName = 'iOS Device (Aplikasi Resmi)';
-      } else if (Platform.isWindows) {
-        deviceType = 'windows';
-        deviceName = 'Windows Workstation (Aplikasi Resmi)';
-      }
-    }
+  @override
+  State<SessionLogScreen> createState() => _SessionLogScreenState();
+}
 
-    return [
-      SessionModel(
-        id: 'sess_current',
-        deviceName: deviceName,
-        deviceType: deviceType,
-        ipAddress: 'Koneksi Terotentikasi Sanctum',
-        location: 'Lingkungan Bank Mini Sekolah',
-        lastAccess: DateTime.now(),
-        isCurrentSession: true,
-      ),
-    ];
+class _SessionLogScreenState extends State<SessionLogScreen> {
+  List<SessionModel> _sessions = [];
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSessions();
+  }
+
+  Future<void> _fetchSessions() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final res = await NasabahApiService.getSessionLogs();
+      if (!mounted) return;
+
+      if (res.success && res.data != null) {
+        setState(() {
+          _sessions = res.data!;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = res.message.isNotEmpty
+              ? res.message
+              : 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.';
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage =
+            'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final sessions = _getActiveDeviceSessions();
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -59,95 +77,143 @@ class SessionLogScreen extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+            tooltip: 'Segarkan Sesi',
+            onPressed: _fetchSessions,
+          ),
+        ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Info Card
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryNavy.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8),
+        child: RefreshIndicator(
+          color: AppColors.primaryNavy,
+          onRefresh: _fetchSessions,
+          child: _isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: AppColors.primaryNavy,
+                  ),
+                )
+              : _errorMessage != null
+                  ? SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        alignment: Alignment.center,
+                        child: ErrorState(
+                          title: 'Gagal Memuat Sesi',
+                          message: _errorMessage!,
+                          onRetry: _fetchSessions,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.security_outlined,
-                        color: AppColors.primaryNavy,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
+                    )
+                  : SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Info Card
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryNavy
+                                        .withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.security_outlined,
+                                    color: AppColors.primaryNavy,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Audit Keamanan Perangkat',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Daftar sesi terotentikasi Laravel Sanctum yang terhubung ke akun Anda.',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11,
+                                          color: AppColors.textSecondary,
+                                          height: 1.3,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
                           Text(
-                            'Audit Keamanan Perangkat',
+                            'Perangkat & Sesi Terdaftar (${_sessions.length})',
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Daftar perangkat yang terhubung ke akun Anda. Segera laporkan jika terdapat aktivitas tak dikenal.',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              color: AppColors.textSecondary,
-                              height: 1.3,
-                            ),
-                          ),
+                          const SizedBox(height: 10),
+
+                          if (_sessions.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 40),
+                              child: EmptyState(
+                                icon: Icons.devices_outlined,
+                                title: 'Belum Ada Riwayat Sesi',
+                                message:
+                                    'Sesi aktif Anda akan dicatat di server backend Laravel.',
+                              ),
+                            )
+                          else
+                            ..._sessions.map((session) => _sessionCard(session)),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              Text(
-                'Perangkat & Sesi Terdaftar',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              ...sessions.map((session) => _sessionCard(session)),
-            ],
-          ),
         ),
       ),
     );
   }
 
-  Widget _sessionCard(dynamic session) {
+  Widget _sessionCard(SessionModel session) {
     IconData deviceIcon;
-    switch (session.deviceType) {
+    switch (session.deviceType.toLowerCase()) {
       case 'android':
         deviceIcon = Icons.phone_android_rounded;
         break;
       case 'ios':
         deviceIcon = Icons.phone_iphone_rounded;
         break;
+      case 'windows':
+        deviceIcon = Icons.laptop_windows_rounded;
+        break;
       default:
-        deviceIcon = Icons.laptop_mac_rounded;
+        deviceIcon = Icons.devices_rounded;
     }
 
     final isCurrent = session.isCurrentSession;
@@ -159,7 +225,9 @@ class SessionLogScreen extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isCurrent ? AppColors.accentTeal.withValues(alpha: 0.5) : AppColors.border,
+          color: isCurrent
+              ? AppColors.accentTeal.withValues(alpha: 0.5)
+              : AppColors.border,
         ),
       ),
       child: Column(
@@ -178,7 +246,9 @@ class SessionLogScreen extends StatelessWidget {
                 ),
                 child: Icon(
                   deviceIcon,
-                  color: isCurrent ? AppColors.primaryNavy : AppColors.textSecondary,
+                  color: isCurrent
+                      ? AppColors.primaryNavy
+                      : AppColors.textSecondary,
                   size: 20,
                 ),
               ),
@@ -241,12 +311,17 @@ class SessionLogScreen extends StatelessWidget {
                         size: 13,
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        session.ipAddress,
-                        style: GoogleFonts.jetBrainsMono(
-                          fontSize: 11,
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
+                      Flexible(
+                        child: Text(
+                          session.ipAddress.isNotEmpty
+                              ? session.ipAddress
+                              : 'IP Terotentikasi',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 11,
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -263,7 +338,9 @@ class SessionLogScreen extends StatelessWidget {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          session.location,
+                          session.location.isNotEmpty
+                              ? session.location
+                              : 'Bank Mini Sekolah',
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             color: AppColors.textSecondary,

@@ -111,6 +111,10 @@ class SessionStorage {
     await saveUserData(nasabah.toJson());
   }
 
+  /// Alias untuk saveCachedNasabah
+  static Future<void> saveNasabah(NasabahModel nasabah) async =>
+      saveCachedNasabah(nasabah);
+
   /// Simpan profil Petugas ke memory cache dan persistent storage
   static Future<void> saveCachedPetugas(PetugasModel petugas) async {
     _cachedPetugas = petugas;

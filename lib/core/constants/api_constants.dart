@@ -48,6 +48,19 @@ class ApiConstants {
   static const String nasabahGantiPin = '/nasabah/ganti-pin';
   static const String nasabahRiwayat = '/nasabah/riwayat';
   static const String nasabahRingkasan = '/nasabah/ringkasan';
+  static const String nasabahEmergencyFreeze = '/nasabah/emergency-freeze';
+  static const String nasabahBadges = '/nasabah/badges';
+  static const String nasabahSessions = '/nasabah/sessions';
+  static const String nasabahGoals = '/nasabah/goals';
+  static String nasabahGoalDetail(dynamic id) => '/nasabah/goals/$id';
+
+  // =========================================================================
+  // 2B. PUSAT NOTIFIKASI UNIVERSAL (NASABAH & PETUGAS)
+  // =========================================================================
+  static const String notifikasi = '/notifikasi';
+  static const String notifikasiUnreadCount = '/notifikasi/unread-count';
+  static String notifikasiRead(dynamic id) => '/notifikasi/$id/read';
+  static const String notifikasiReadAll = '/notifikasi/read-all';
 
   // =========================================================================
   // 3. MODUL PETUGAS & LOKET TELLER (MOBILE POS)
@@ -91,4 +104,3 @@ class ApiConstants {
   static const String laporanSaldoPerKelas = '/laporan/saldo-per-kelas';
   static const String laporanMutasiJurnal = '/laporan/mutasi-jurnal';
 }
-

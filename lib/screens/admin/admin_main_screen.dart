@@ -14,6 +14,7 @@ import '../../widgets/common/app_states.dart';
 import '../login_screen.dart';
 
 /// Shell Navigasi Utama untuk Role: Administrator Utama (System & Infrastructure)
+/// Menggunakan Backend Laravel API sebagai Single Source of Truth — Zero Dummy Data
 class AdminMainScreen extends StatefulWidget {
   final PetugasModel? petugas;
 
@@ -30,35 +31,16 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
   int _responseTimeMs = 0;
   bool _isChecking = false;
 
-  // State Kehadiran & Shift Kerja Petugas
-  final List<Map<String, dynamic>> _staffAttendance = [
-    {
-      'nama': 'Siti Rahmawati (Teller 1)',
-      'role': 'Teller Loket',
-      'shift': 'Shift Pagi (07.30 - 11.30 WIB)',
-      'status': 'Hadir',
-      'jam_masuk': '07.25 WIB',
-    },
-    {
-      'nama': 'Ahmad Fauzi (Teller 2)',
-      'role': 'Teller Loket',
-      'shift': 'Shift Siang (11.30 - 15.30 WIB)',
-      'status': 'Izin',
-      'jam_masuk': '-',
-    },
-    {
-      'nama': 'Drs. Hendro Wibowo',
-      'role': 'Supervisor',
-      'shift': 'Full Day (07.30 - 15.30 WIB)',
-      'status': 'Hadir',
-      'jam_masuk': '07.18 WIB',
-    },
-  ];
+  // State Kehadiran Petugas dari Backend API
+  List<Map<String, dynamic>> _staffAttendance = [];
+  bool _isLoadingStaff = false;
+  String? _staffError;
 
   @override
   void initState() {
     super.initState();
     _checkServer();
+    _fetchStaffAttendance();
   }
 
   Future<void> _checkServer() async {
@@ -78,8 +60,59 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
       _isHealthy = res.success;
       _serverStatus = res.success
           ? 'Server Laravel Aktif & Terhubung (MySQL Online)'
-          : 'Server Terputus / Mode Offline Mocking';
+          : 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan.';
     });
+  }
+
+  Future<void> _fetchStaffAttendance() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingStaff = true;
+      _staffError = null;
+    });
+
+    try {
+      final res = await ApiClient.instance.get(ApiConstants.avalisAbsensi);
+      if (!mounted) return;
+
+      if (res.success && res.data != null) {
+        List<dynamic> items = [];
+        if (res.data is Map<String, dynamic>) {
+          final dataMap = res.data as Map<String, dynamic>;
+          if (dataMap['data'] is Map<String, dynamic> &&
+              dataMap['data']['items'] is List) {
+            items = dataMap['data']['items'];
+          } else if (dataMap['items'] is List) {
+            items = dataMap['items'];
+          } else if (dataMap['data'] is List) {
+            items = dataMap['data'];
+          }
+        } else if (res.data is List) {
+          items = res.data;
+        }
+
+        setState(() {
+          _staffAttendance = items
+              .map((item) => Map<String, dynamic>.from(item as Map))
+              .toList();
+          _isLoadingStaff = false;
+        });
+      } else {
+        setState(() {
+          _staffError = res.message.isNotEmpty
+              ? res.message
+              : 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.';
+          _isLoadingStaff = false;
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _staffError =
+            'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.';
+        _isLoadingStaff = false;
+      });
+    }
   }
 
   void _showChangeBaseUrlDialog() {
@@ -157,8 +190,10 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                       await SessionStorage.setBaseUrl(ctrl.text.trim());
                       await ApiClient.instance.updateBaseUrl();
                       if (mounted) {
-                        showAppSnackbar(context, 'Base URL berhasil diperbarui!');
+                        showAppSnackbar(
+                            context, 'Base URL berhasil diperbarui!');
                         _checkServer();
+                        _fetchStaffAttendance();
                       }
                     }
                   },
@@ -174,7 +209,9 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
   @override
   Widget build(BuildContext context) {
     final cached = SessionStorage.cachedPetugas;
-    final namaPetugas = widget.petugas?.namaPetugas ?? cached?.namaPetugas ?? 'Administrator Utama';
+    final namaPetugas = widget.petugas?.namaPetugas ??
+        cached?.namaPetugas ??
+        'Administrator Utama';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -182,7 +219,8 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
         backgroundColor: AppColors.primaryNavy,
         elevation: 0,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 12, top: 10, bottom: 10, right: 2),
+          padding:
+              const EdgeInsets.only(left: 12, top: 10, bottom: 10, right: 2),
           child: Image.asset(
             'assets/images/SMK_Negeri_1_Bantul_logo.png',
             fit: BoxFit.contain,
@@ -196,7 +234,8 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: AppColors.danger.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(4),
@@ -252,7 +291,10 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                   )
                 : const Icon(Icons.refresh_rounded, color: Colors.white),
             tooltip: 'Uji Latensi Server',
-            onPressed: _checkServer,
+            onPressed: () {
+              _checkServer();
+              _fetchStaffAttendance();
+            },
           ),
           IconButton(
             icon: const Icon(Icons.logout_rounded, color: Colors.white70),
@@ -285,7 +327,8 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                         width: 10,
                         height: 10,
                         decoration: BoxDecoration(
-                          color: _isHealthy ? AppColors.success : AppColors.danger,
+                          color:
+                              _isHealthy ? AppColors.success : AppColors.danger,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -341,7 +384,8 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                         style: GoogleFonts.jetBrainsMono(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: _isHealthy ? AppColors.success : AppColors.danger,
+                          color:
+                              _isHealthy ? AppColors.success : AppColors.danger,
                         ),
                       ),
                     ],
@@ -374,67 +418,132 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
             ),
             const SizedBox(height: 10),
 
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _staffAttendance.length,
-              separatorBuilder: (_, index) => const SizedBox(height: 8),
-              itemBuilder: (ctx, idx) {
-                final staff = _staffAttendance[idx];
-                final status = staff['status'] as String;
-                StatusBadgeType bType;
-                if (status == 'Hadir') {
-                  bType = StatusBadgeType.success;
-                } else if (status == 'Izin') {
-                  bType = StatusBadgeType.warning;
-                } else {
-                  bType = StatusBadgeType.danger;
-                }
-
-                return Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.border),
+            if (_isLoadingStaff)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primaryNavy,
                   ),
-                  child: Row(
-                    children: [
-                      ProfileAvatar(
-                        name: staff['nama'],
-                        size: 36,
-                        backgroundColor: AppColors.primaryNavy,
-                        textColor: Colors.white,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              staff['nama'],
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            Text(
-                              '${staff['shift']} • Masuk: ${staff['jam_masuk']}',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
+                ),
+              )
+            else if (_staffError != null)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline_rounded,
+                        color: AppColors.textSecondary, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _staffError!,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
                         ),
                       ),
-                      StatusBadge(label: status, type: bType),
-                    ],
+                    ),
+                    TextButton(
+                      onPressed: _fetchStaffAttendance,
+                      child: const Text('Coba Lagi'),
+                    ),
+                  ],
+                ),
+              )
+            else if (_staffAttendance.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.border),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  'Belum ada data presensi petugas hari ini.',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
                   ),
-                );
-              },
-            ),
+                ),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _staffAttendance.length,
+                separatorBuilder: (_, index) => const SizedBox(height: 8),
+                itemBuilder: (ctx, idx) {
+                  final staff = _staffAttendance[idx];
+                  final nama = staff['nama']?.toString() ??
+                      staff['user']?['nama_petugas']?.toString() ??
+                      'Petugas Loket';
+                  final status = staff['status']?.toString() ?? 'Hadir';
+                  final shift = staff['shift_jaga']?.toString() ??
+                      staff['shift']?.toString() ??
+                      'Shift Pagi';
+                  final jamMasuk = staff['jam_masuk']?.toString() ?? '-';
+
+                  StatusBadgeType bType;
+                  if (status == 'Hadir') {
+                    bType = StatusBadgeType.success;
+                  } else if (status == 'Izin') {
+                    bType = StatusBadgeType.warning;
+                  } else {
+                    bType = StatusBadgeType.danger;
+                  }
+
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        ProfileAvatar(
+                          name: nama,
+                          size: 36,
+                          backgroundColor: AppColors.primaryNavy,
+                          textColor: Colors.white,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                nama,
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              Text(
+                                '$shift • Masuk: $jamMasuk',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        StatusBadge(label: status, type: bType),
+                      ],
+                    ),
+                  );
+                },
+              ),
             const SizedBox(height: 20),
 
             // Arsitektur RBAC Bank Mini
@@ -452,14 +561,16 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
               role: 'ADMINISTRATOR',
               badgeColor: AppColors.danger,
               credential: 'admin / admin123',
-              desc: 'Manajemen server, konfigurasi global, audit log transaksi',
+              desc:
+                  'Manajemen server, konfigurasi global, audit log transaksi',
             ),
             const SizedBox(height: 8),
             _buildRbacRow(
               role: 'SUPERVISOR',
               badgeColor: AppColors.warning,
               credential: 'spv1 / spv123',
-              desc: 'Approval tiket droping kas loket & verifikasi daily report',
+              desc:
+                  'Approval tiket droping kas loket & verifikasi daily report',
             ),
             const SizedBox(height: 8),
             _buildRbacRow(
@@ -494,9 +605,11 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
             const SizedBox(height: 6),
             _buildSpecTile('Autentikasi Token', 'Laravel Sanctum Bearer Token'),
             const SizedBox(height: 6),
-            _buildSpecTile('HTTP Client Library', 'Dio v5.11.1 (Interceptors & Retry)'),
+            _buildSpecTile(
+                'HTTP Client Library', 'Dio v5.11.1 (Interceptors & Retry)'),
             const SizedBox(height: 6),
-            _buildSpecTile('Scanner Engine', 'mobile_scanner v7.4.2 (Native Barcode)'),
+            _buildSpecTile(
+                'Scanner Engine', 'mobile_scanner v7.4.2 (Native Barcode)'),
             const SizedBox(height: 6),
             _buildSpecTile('Aturan Saldo Minimal', 'Rp 10.000 mengendap di rekening'),
           ],

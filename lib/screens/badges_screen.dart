@@ -1,73 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../core/storage/session_storage.dart';
 import '../core/theme/app_theme.dart';
 import '../core/utils/helpers.dart';
 import '../models/badge_model.dart';
+import '../services/nasabah_api_service.dart';
+import '../widgets/common/app_states.dart';
 
 /// Halaman Lencana Prestasi Menabung (Gamification Badges)
-class BadgesScreen extends StatelessWidget {
+/// Menggunakan Backend Laravel sebagai Single Source of Truth
+class BadgesScreen extends StatefulWidget {
   const BadgesScreen({super.key});
 
-  List<BadgeModel> _computeBadges(num saldo) {
-    return [
-      BadgeModel(
-        id: 'badge_1',
-        nama: 'First Deposit',
-        deskripsi: 'Berhasil melakukan setoran awal tabungan',
-        icon: 'savings',
-        tier: 'bronze',
-        isUnlocked: saldo > 0,
-        unlockedAt: saldo > 0 ? DateTime(2026, 10, 26) : null,
-      ),
-      BadgeModel(
-        id: 'badge_2',
-        nama: 'Silver Saver',
-        deskripsi: 'Mencapai total saldo tabungan Rp 100.000',
-        icon: 'military_tech',
-        tier: 'silver',
-        isUnlocked: saldo >= 100000,
-      ),
-      BadgeModel(
-        id: 'badge_3',
-        nama: 'Golden Saver',
-        deskripsi: 'Mencapai total saldo tabungan Rp 500.000',
-        icon: 'stars',
-        tier: 'gold',
-        isUnlocked: saldo >= 500000,
-      ),
-      BadgeModel(
-        id: 'badge_4',
-        nama: 'Master Saver',
-        deskripsi: 'Mencapai total saldo tabungan Rp 1.000.000',
-        icon: 'workspace_premium',
-        tier: 'gold',
-        isUnlocked: saldo >= 1000000,
-      ),
-      BadgeModel(
-        id: 'badge_5',
-        nama: 'Disiplin Finansial',
-        deskripsi: 'Mencapai total akumulasi simpanan Rp 2.000.000',
-        icon: 'verified',
-        tier: 'gold',
-        isUnlocked: saldo >= 2000000,
-      ),
-      BadgeModel(
-        id: 'badge_6',
-        nama: 'Duta Literasi',
-        deskripsi: 'Mencapai saldo Rp 5.000.000 dan aktif menabung',
-        icon: 'diamond',
-        tier: 'gold',
-        isUnlocked: saldo >= 5000000,
-      ),
-    ];
+  @override
+  State<BadgesScreen> createState() => _BadgesScreenState();
+}
+
+class _BadgesScreenState extends State<BadgesScreen> {
+  List<BadgeModel> _badges = [];
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBadges();
+  }
+
+  Future<void> _fetchBadges() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final res = await NasabahApiService.getBadges();
+      if (!mounted) return;
+
+      if (res.success && res.data != null) {
+        setState(() {
+          _badges = res.data!;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = res.message.isNotEmpty
+              ? res.message
+              : 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.';
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage =
+            'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final saldo = SessionStorage.cachedNasabah?.totalSaldo ?? 0;
-    final badges = _computeBadges(saldo);
-    final unlockedCount = badges.where((b) => b.isUnlocked).length;
+    final unlockedBadges = _badges.where((b) => b.isUnlocked).toList();
+    final lockedBadges = _badges.where((b) => !b.isUnlocked).toList();
+    final unlockedCount = unlockedBadges.length;
+    final totalCount = _badges.length;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -84,47 +81,90 @@ class BadgesScreen extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+            tooltip: 'Segarkan Lencana',
+            onPressed: _fetchBadges,
+          ),
+        ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Stats Card
-              _buildStatsCard(unlockedCount, badges.length),
-              const SizedBox(height: 20),
+        child: RefreshIndicator(
+          color: AppColors.primaryNavy,
+          onRefresh: _fetchBadges,
+          child: _isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: AppColors.primaryNavy,
+                  ),
+                )
+              : _errorMessage != null
+                  ? SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        alignment: Alignment.center,
+                        child: ErrorState(
+                          title: 'Gagal Memuat Lencana',
+                          message: _errorMessage!,
+                          onRetry: _fetchBadges,
+                        ),
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Stats Card
+                          _buildStatsCard(unlockedCount, totalCount),
+                          const SizedBox(height: 20),
 
-              // Unlocked Badges
-              Text(
-                'Lencana Telah Diraih',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 10),
-              ...badges
-                  .where((b) => b.isUnlocked)
-                  .map((b) => _badgeCard(b, true)),
-              const SizedBox(height: 20),
+                          // Unlocked Badges
+                          if (unlockedBadges.isNotEmpty) ...[
+                            Text(
+                              'Lencana Telah Diraih (${unlockedBadges.length})',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            ...unlockedBadges.map((b) => _badgeCard(b, true)),
+                            const SizedBox(height: 20),
+                          ],
 
-              // Locked Badges
-              Text(
-                'Tantangan Lencana Berikutnya',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 10),
-              ...badges
-                  .where((b) => !b.isUnlocked)
-                  .map((b) => _badgeCard(b, false)),
-            ],
-          ),
+                          // Locked Badges
+                          if (lockedBadges.isNotEmpty) ...[
+                            Text(
+                              'Tantangan Lencana Berikutnya (${lockedBadges.length})',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            ...lockedBadges.map((b) => _badgeCard(b, false)),
+                          ],
+
+                          if (_badges.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 40),
+                              child: EmptyState(
+                                icon: Icons.military_tech_outlined,
+                                title: 'Belum Ada Data Lencana',
+                                message:
+                                    'Lencana prestasi akan ditampilkan berdasarkan rekam jejak tabungan Anda.',
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
         ),
       ),
     );
@@ -132,6 +172,14 @@ class BadgesScreen extends StatelessWidget {
 
   Widget _buildStatsCard(int unlocked, int total) {
     final double percent = total > 0 ? (unlocked / total) : 0.0;
+    String level = 'Pemula Menabung';
+    if (unlocked >= 5) {
+      level = 'Duta Literasi Finansial';
+    } else if (unlocked >= 3) {
+      level = 'Penabung Disiplin';
+    } else if (unlocked >= 1) {
+      level = 'Penabung Aktif';
+    }
 
     return Container(
       width: double.infinity,
@@ -196,7 +244,8 @@ class BadgesScreen extends StatelessWidget {
             child: LinearProgressIndicator(
               value: percent,
               backgroundColor: Colors.white12,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentTeal),
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(AppColors.accentTeal),
               minHeight: 6,
             ),
           ),
@@ -212,7 +261,7 @@ class BadgesScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                'Level: Penabung Disiplin',
+                'Level: $level',
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -226,11 +275,11 @@ class BadgesScreen extends StatelessWidget {
     );
   }
 
-  Widget _badgeCard(dynamic badge, bool isUnlocked) {
+  Widget _badgeCard(BadgeModel badge, bool isUnlocked) {
     Color tierColor;
     String tierLabel;
 
-    switch (badge.tier) {
+    switch (badge.tier.toLowerCase()) {
       case 'gold':
         tierColor = AppColors.badgeGold;
         tierLabel = 'EMAS';
@@ -251,7 +300,9 @@ class BadgesScreen extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isUnlocked ? tierColor.withValues(alpha: 0.35) : AppColors.border,
+          color: isUnlocked
+              ? tierColor.withValues(alpha: 0.35)
+              : AppColors.border,
         ),
       ),
       child: Row(
@@ -265,12 +316,16 @@ class BadgesScreen extends StatelessWidget {
                   : AppColors.surfaceMuted,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isUnlocked ? tierColor.withValues(alpha: 0.3) : AppColors.border,
+                color: isUnlocked
+                    ? tierColor.withValues(alpha: 0.3)
+                    : AppColors.border,
               ),
             ),
             child: Center(
               child: Icon(
-                isUnlocked ? Icons.workspace_premium_rounded : Icons.lock_outline_rounded,
+                isUnlocked
+                    ? Icons.workspace_premium_rounded
+                    : Icons.lock_outline_rounded,
                 color: isUnlocked ? tierColor : AppColors.textMuted,
                 size: 22,
               ),
@@ -299,9 +354,11 @@ class BadgesScreen extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: tierColor.withValues(alpha: isUnlocked ? 0.12 : 0.05),
+                        color: tierColor
+                            .withValues(alpha: isUnlocked ? 0.12 : 0.05),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(

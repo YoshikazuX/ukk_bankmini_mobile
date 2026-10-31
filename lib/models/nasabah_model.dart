@@ -7,7 +7,7 @@ class NasabahModel {
   final String kelas;
   final String jurusan;
   final String kategori;
-  final String status; // 'AKTIF', 'DIBLOKIR'
+  final String status; // 'AKTIF', 'DIBLOKIR', 'NONAKTIF'
   final double totalSaldo;
   final double saldoMengendap; // Rp10.000
   final String? fotoProfil;
@@ -44,11 +44,15 @@ class NasabahModel {
       kategori: (json['kategori'] ?? 'SISWA').toString().toUpperCase(),
       status: (json['status'] ?? 'AKTIF').toString().toUpperCase(),
       totalSaldo: double.tryParse((json['saldo'] ?? 0).toString()) ?? 0.0,
-      saldoMengendap: double.tryParse((json['saldo_mengendap'] ?? 10000).toString()) ?? 10000.0,
+      saldoMengendap:
+          double.tryParse((json['saldo_mengendap'] ?? 10000).toString()) ??
+              10000.0,
       fotoProfil: json['foto_url']?.toString(),
       username: json['username']?.toString(),
       pinKeamanan: (json['pin_keamanan'] ?? '240808').toString(),
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString())
+          : null,
     );
   }
 
@@ -71,17 +75,26 @@ class NasabahModel {
     };
   }
 
-  /// Saldo maksimal yang boleh ditarik
+  /// Saldo maksimal yang boleh ditarik (Saldo Efektif / Tersedia)
   double get saldoEfektif =>
       (totalSaldo - saldoMengendap).clamp(0, double.infinity);
 
+  /// Alias saldoTersedia sesuai PRD
+  double get saldoTersedia => saldoEfektif;
+
+  /// Status keaktifan rekening
+  bool get isActive => status.toUpperCase() == 'AKTIF';
+
+  /// Status rekening dibekukan / diblokir
+  bool get isBlocked =>
+      status.toUpperCase() == 'DIBLOKIR' || status.toUpperCase() == 'NONAKTIF';
+
   /// Payload QRIS / Kartu Digital Siswa
-  String get qrisPayload => 'BANKMINI:REK:$noRekening:NIS:$nis:NAMA:$namaLengkap';
+  String get qrisPayload =>
+      'BANKMINI:REK:$noRekening:NIS:$nis:NAMA:$namaLengkap';
 
   /// Cek kecukupan saldo efektif
   bool canWithdraw(double amount) => amount <= saldoEfektif;
-
-  bool get isBlocked => status.toUpperCase() == 'DIBLOKIR';
 
   NasabahModel copyWith({
     String? status,

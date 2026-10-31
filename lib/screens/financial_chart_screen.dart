@@ -3,10 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../core/theme/app_theme.dart';
 import '../core/utils/helpers.dart';
-import '../models/transaksi_model.dart';
 import '../services/nasabah_api_service.dart';
+import '../widgets/common/app_states.dart';
 
 /// Halaman Grafik & Analisis Keuangan Nasabah
+/// Menggunakan Backend Laravel sebagai Single Source of Truth — Zero Dummy Data
 class FinancialChartScreen extends StatefulWidget {
   const FinancialChartScreen({super.key});
 
@@ -17,213 +18,252 @@ class FinancialChartScreen extends StatefulWidget {
 class _FinancialChartScreenState extends State<FinancialChartScreen> {
   // Chart view mode: 0 = Bar Chart (Setoran vs Penarikan), 1 = Line Chart (Pertumbuhan Saldo)
   int _chartMode = 0;
-  // Period filter: 0 = Semua (10 bln), 1 = 6 Bulan Terakhir, 2 = 3 Bulan Terakhir
+  // Period filter: 0 = 6 Bulan Terakhir, 1 = 3 Bulan Terakhir
   int _periodFilter = 0;
-  List<TransaksiModel> _transactions = [];
-  bool _isLoading = false;
 
-  final List<String> _monthNames = const [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'Mei',
-    'Jun',
-    'Jul',
-    'Agu',
-    'Sep',
-    'Okt',
-    'Nov',
-    'Des',
-  ];
+  List<Map<String, dynamic>> _monthlyTrend = [];
+  double _avgMonthlyBackend = 0.0;
+  double _totalSaldoReal = 0.0;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _fetchLiveTransactions();
+    _fetchLiveData();
   }
 
-  Future<void> _fetchLiveTransactions() async {
-    setState(() => _isLoading = true);
+  Future<void> _fetchLiveData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     try {
-      final res = await NasabahApiService.getRiwayat();
-      if (res.data != null && mounted) {
-        setState(() => _transactions = res.data!);
+      final res = await NasabahApiService.getRingkasan();
+
+      if (!mounted) return;
+
+      if (res.success && res.data != null) {
+        final data = res.data as Map<String, dynamic>;
+        _totalSaldoReal = (data['total_saldo'] as num?)?.toDouble() ?? 0.0;
+        _avgMonthlyBackend =
+            (data['average_monthly_deposit'] as num?)?.toDouble() ?? 0.0;
+
+        if (data['monthly_trend_6_months'] is List) {
+          _monthlyTrend = List<Map<String, dynamic>>.from(
+            (data['monthly_trend_6_months'] as List).map(
+              (item) => Map<String, dynamic>.from(item as Map),
+            ),
+          );
+        }
+        setState(() {
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = res.message.isNotEmpty
+              ? res.message
+              : 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.';
+          _isLoading = false;
+        });
       }
     } catch (_) {
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (!mounted) return;
+      setState(() {
+        _errorMessage =
+            'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.';
+        _isLoading = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Bangun data keuangan bulanan nyata dari transaksi nasabah backend
-    final currentMonth = DateTime.now().month;
-    final int monthsToGenerate = 10;
-    List<double> rawSetoran = List.filled(monthsToGenerate, 0.0);
-    List<double> rawPenarikan = List.filled(monthsToGenerate, 0.0);
-
-    for (final trx in _transactions) {
-      final m = trx.tanggal.month;
-      // Hitung offset bulan relatif terhadap bulan saat ini
-      int index = monthsToGenerate - 1 - (currentMonth - m);
-      if (index >= 0 && index < monthsToGenerate) {
-        if (trx.isSetoran || trx.isTransferMasuk) {
-          rawSetoran[index] += trx.jumlah;
-        } else if (trx.isPenarikan || trx.isTransferKeluar) {
-          rawPenarikan[index] += trx.jumlah;
-        }
-      }
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: _buildAppBar(),
+        body: const Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            color: AppColors.primaryNavy,
+          ),
+        ),
+      );
     }
 
-    // Apply period filter
-    int count = rawSetoran.length;
-    if (_periodFilter == 1 && count > 6) {
-      count = 6;
-    } else if (_periodFilter == 2 && count > 3) {
-      count = 3;
+    if (_errorMessage != null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: _buildAppBar(),
+        body: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ErrorState(
+              title: 'Gagal Memuat Analisis',
+              message: _errorMessage!,
+              onRetry: _fetchLiveData,
+            ),
+          ),
+        ),
+      );
     }
 
-    final setoran = rawSetoran.isEmpty
-        ? <double>[]
-        : rawSetoran.sublist(rawSetoran.length - count);
-    final penarikan = rawPenarikan.isEmpty
-        ? <double>[]
-        : rawPenarikan.sublist(rawPenarikan.length - count);
-    final months = count > 0 && count <= _monthNames.length
-        ? _monthNames.sublist(0, count)
-        : <String>[];
+    // Bangun data keuangan berdasarkan monthlyTrend backend
+    List<Map<String, dynamic>> displayedTrend = List.from(_monthlyTrend);
+
+    if (_periodFilter == 1 && displayedTrend.length > 3) {
+      displayedTrend = displayedTrend.sublist(displayedTrend.length - 3);
+    }
+
+    final List<String> months = displayedTrend
+        .map((m) => m['month_name']?.toString() ?? '')
+        .toList();
+    final List<double> setoran = displayedTrend
+        .map((m) => (m['setoran'] as num?)?.toDouble() ?? 0.0)
+        .toList();
+    final List<double> penarikan = displayedTrend
+        .map((m) => (m['penarikan'] as num?)?.toDouble() ?? 0.0)
+        .toList();
+    final List<double> runningBalances = displayedTrend
+        .map((m) => (m['running_balance'] as num?)?.toDouble() ?? 0.0)
+        .toList();
 
     double totalSetoran = setoran.fold(0, (a, b) => a + b);
     double totalPenarikan = penarikan.fold(0, (a, b) => a + b);
     double netTabungan = totalSetoran - totalPenarikan;
-    double avgMonthly = count > 0 ? (totalSetoran / count) : 0;
+    double avgMonthly = _avgMonthlyBackend > 0
+        ? _avgMonthlyBackend
+        : (months.isNotEmpty ? (totalSetoran / months.length) : 0);
     double savingsRate = totalSetoran > 0
         ? ((totalSetoran - totalPenarikan) / totalSetoran * 100).clamp(0, 100)
         : 0;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'Grafik & Analisis Keuangan',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: AppColors.primaryNavy,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          if (_isLoading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accentTeal),
-                ),
-              ),
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.info_outline_rounded, color: Colors.white),
-              tooltip: 'Panduan Grafik',
-              onPressed: () => _showChartInfoDialog(context),
-            ),
-        ],
-      ),
+      appBar: _buildAppBar(),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Summary cards
-              _buildSummaryCards(
-                totalSetoran: totalSetoran,
-                totalPenarikan: totalPenarikan,
-                netTabungan: netTabungan,
-                savingsRate: savingsRate,
-                avgMonthly: avgMonthly,
-              ),
-              const SizedBox(height: 16),
-
-              // Filter Controls & View Switcher
-              _buildFilterAndSwitcher(),
-              const SizedBox(height: 14),
-
-              // Main Chart Container
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+        child: RefreshIndicator(
+          color: AppColors.primaryNavy,
+          onRefresh: _fetchLiveData,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Summary cards
+                _buildSummaryCards(
+                  totalSetoran: totalSetoran,
+                  totalPenarikan: totalPenarikan,
+                  netTabungan: netTabungan,
+                  savingsRate: savingsRate,
+                  avgMonthly: avgMonthly,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _chartMode == 0
-                                  ? 'Perbandingan Arus Kas'
-                                  : 'Tren Akumulasi Saldo',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
+                const SizedBox(height: 16),
+
+                // Filter Controls & View Switcher
+                _buildFilterAndSwitcher(),
+                const SizedBox(height: 14),
+
+                // Main Chart Container
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _chartMode == 0
+                                    ? 'Perbandingan Arus Kas'
+                                    : 'Tren Akumulasi Saldo',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
-                            ),
-                            Text(
-                              _chartMode == 0
-                                  ? 'Setoran (Hijau) vs Penarikan (Merah)'
-                                  : 'Pertumbuhan tabungan per bulan',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                color: AppColors.textSecondary,
+                              Text(
+                                _chartMode == 0
+                                    ? 'Setoran (Hijau) vs Penarikan (Merah)'
+                                    : 'Pertumbuhan tabungan berjalan',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        _buildLegend(),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 220,
-                      child: setoran.length > 1
-                          ? (_chartMode == 0
-                              ? _buildBarChart(setoran, penarikan, months)
-                              : _buildLineChart(setoran, penarikan, months))
-                          : _buildEmptyChartState(),
-                    ),
-                  ],
+                            ],
+                          ),
+                          _buildLegend(),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 220,
+                        child: months.isNotEmpty &&
+                                (totalSetoran > 0 || totalPenarikan > 0 || _totalSaldoReal > 0)
+                            ? (_chartMode == 0
+                                ? _buildBarChart(setoran, penarikan, months)
+                                : _buildLineChart(runningBalances, months))
+                            : _buildEmptyChartState(),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // Financial Literacy Insight Card
-              _buildInsightCard(savingsRate),
-              const SizedBox(height: 16),
+                // Financial Literacy Insight Card
+                _buildInsightCard(savingsRate),
+                const SizedBox(height: 16),
 
-              // Monthly Breakdown List
-              _buildMonthlyBreakdown(setoran, penarikan, months),
-              const SizedBox(height: 20),
-            ],
+                // Monthly Breakdown List
+                _buildMonthlyBreakdown(setoran, penarikan, months),
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      title: Text(
+        'Grafik & Analisis Keuangan',
+        style: GoogleFonts.inter(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+      ),
+      backgroundColor: AppColors.primaryNavy,
+      elevation: 0,
+      centerTitle: true,
+      iconTheme: const IconThemeData(color: Colors.white),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+          tooltip: 'Segarkan',
+          onPressed: _fetchLiveData,
+        ),
+        IconButton(
+          icon: const Icon(Icons.info_outline_rounded, color: Colors.white),
+          tooltip: 'Panduan Grafik',
+          onPressed: () => _showChartInfoDialog(context),
+        ),
+      ],
     );
   }
 
@@ -284,7 +324,8 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
               child: _miniMetricCard(
                 label: 'Rasio Tabung',
                 value: '${savingsRate.toStringAsFixed(0)}%',
-                color: savingsRate >= 50 ? AppColors.success : AppColors.warning,
+                color:
+                    savingsRate >= 50 ? AppColors.success : AppColors.warning,
               ),
             ),
           ],
@@ -410,7 +451,7 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Statistik Akun Baru',
+            'Belum Ada Mutasi Transaksi',
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -477,11 +518,9 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            _periodChip(0, 'Semua Data'),
+            _periodChip(0, '6 Bulan Terakhir'),
             const SizedBox(width: 6),
-            _periodChip(1, '6 Bulan'),
-            const SizedBox(width: 6),
-            _periodChip(2, '3 Bulan'),
+            _periodChip(1, '3 Bulan Terakhir'),
           ],
         ),
       ],
@@ -617,10 +656,15 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final isSetoran = rodIndex == 0;
               final type = isSetoran ? 'Setoran' : 'Penarikan';
+              final monthLabel = groupIndex >= 0 && groupIndex < months.length
+                  ? months[groupIndex]
+                  : '';
               return BarTooltipItem(
-                '$type (${months[groupIndex]})\n',
+                '$type ($monthLabel)\n',
                 GoogleFonts.inter(
-                  color: isSetoran ? AppColors.accentTeal : const Color(0xFFF87171),
+                  color: isSetoran
+                      ? AppColors.accentTeal
+                      : const Color(0xFFF87171),
                   fontWeight: FontWeight.bold,
                   fontSize: 11,
                 ),
@@ -640,8 +684,10 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
         ),
         titlesData: FlTitlesData(
           show: true,
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -691,21 +737,25 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
           ),
         ),
         borderData: FlBorderData(show: false),
-        barGroups: List.generate(setoran.length, (i) {
+        barGroups: List.generate(months.length, (i) {
+          final s = i < setoran.length ? setoran[i] : 0.0;
+          final p = i < penarikan.length ? penarikan[i] : 0.0;
           return BarChartGroupData(
             x: i,
             barRods: [
               BarChartRodData(
-                toY: setoran[i],
+                toY: s,
                 color: AppColors.success,
                 width: 7,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(3)),
               ),
               BarChartRodData(
-                toY: penarikan[i],
+                toY: p,
                 color: AppColors.danger,
                 width: 7,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(3)),
               ),
             ],
           );
@@ -715,28 +765,26 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
   }
 
   Widget _buildLineChart(
-    List<double> setoran,
-    List<double> penarikan,
+    List<double> balances,
     List<String> months,
   ) {
-    // Calculate running balance
+    if (balances.isEmpty) return _buildEmptyChartState();
+
     List<FlSpot> spots = [];
-    double currentBalance = 350000;
-    for (int i = 0; i < setoran.length; i++) {
-      currentBalance += (setoran[i] - penarikan[i]);
-      spots.add(FlSpot(i.toDouble(), currentBalance));
+    for (int i = 0; i < balances.length; i++) {
+      spots.add(FlSpot(i.toDouble(), balances[i]));
     }
 
     double minY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
     double maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
     if (minY == maxY) {
-      minY = minY * 0.8;
-      maxY = maxY * 1.2;
+      minY = minY > 0 ? minY * 0.8 : 0;
+      maxY = maxY > 0 ? maxY * 1.2 : 50000;
     }
 
     return LineChart(
       LineChartData(
-        minY: minY * 0.95,
+        minY: (minY * 0.95).clamp(0, double.infinity),
         maxY: maxY * 1.05,
         lineTouchData: LineTouchData(
           touchTooltipData: LineTouchTooltipData(
@@ -745,8 +793,11 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
             getTooltipItems: (touchedSpots) {
               return touchedSpots.map((spot) {
                 int index = spot.x.toInt();
+                final mLabel = index >= 0 && index < months.length
+                    ? months[index]
+                    : '';
                 return LineTooltipItem(
-                  'Saldo ${months[index]}\n',
+                  'Saldo $mLabel\n',
                   GoogleFonts.inter(
                     color: AppColors.accentTeal,
                     fontWeight: FontWeight.bold,
@@ -778,8 +829,10 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
         ),
         titlesData: FlTitlesData(
           show: true,
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -861,7 +914,9 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isGood ? AppColors.success.withValues(alpha: 0.25) : AppColors.warning.withValues(alpha: 0.25),
+          color: isGood
+              ? AppColors.success.withValues(alpha: 0.25)
+              : AppColors.warning.withValues(alpha: 0.25),
         ),
       ),
       child: Row(
@@ -870,11 +925,14 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (isGood ? AppColors.success : AppColors.warning).withValues(alpha: 0.12),
+              color: (isGood ? AppColors.success : AppColors.warning)
+                  .withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
-              isGood ? Icons.auto_awesome_rounded : Icons.tips_and_updates_rounded,
+              isGood
+                  ? Icons.auto_awesome_rounded
+                  : Icons.tips_and_updates_rounded,
               color: isGood ? AppColors.success : AppColors.warning,
               size: 18,
             ),
@@ -949,73 +1007,91 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: months.length,
-            separatorBuilder: (context, index) =>
-                const Divider(color: AppColors.border, height: 14),
-            itemBuilder: (context, i) {
-              final s = setoran[i];
-              final p = penarikan[i];
-              final net = s - p;
+          if (months.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Text(
+                  'Belum ada rincian transaksi bulanan',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: months.length,
+              separatorBuilder: (context, index) =>
+                  const Divider(color: AppColors.border, height: 14),
+              itemBuilder: (context, i) {
+                final s = i < setoran.length ? setoran[i] : 0.0;
+                final p = i < penarikan.length ? penarikan[i] : 0.0;
+                final net = s - p;
 
-              return Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceMuted,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: AppColors.border),
+                return Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceMuted,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        months[i],
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                     ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      months[i],
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Text(
+                            '+ ${formatRupiah(s)}',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: s > 0
+                                  ? AppColors.success
+                                  : AppColors.textMuted,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '- ${formatRupiah(p)}',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: p > 0
+                                  ? AppColors.danger
+                                  : AppColors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      net >= 0 ? '+${formatRupiah(net)}' : formatRupiah(net),
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: net >= 0 ? AppColors.success : AppColors.danger,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Text(
-                          '+ ${formatRupiah(s)}',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: s > 0 ? AppColors.success : AppColors.textMuted,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '- ${formatRupiah(p)}',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: p > 0 ? AppColors.danger : AppColors.textMuted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    net >= 0 ? '+${formatRupiah(net)}' : formatRupiah(net),
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: net >= 0 ? AppColors.success : AppColors.danger,
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
+                  ],
+                );
+              },
+            ),
         ],
       ),
     );
@@ -1033,7 +1109,8 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
         ),
         title: Row(
           children: [
-            const Icon(Icons.insights_rounded, color: AppColors.primaryNavy, size: 20),
+            const Icon(Icons.insights_rounded,
+                color: AppColors.primaryNavy, size: 20),
             const SizedBox(width: 8),
             Text(
               'Info Analisis Finansial',
