@@ -101,7 +101,7 @@ class _BlokirRekeningScreenState extends State<BlokirRekeningScreen> {
           children: [
             const Icon(
               Icons.admin_panel_settings_outlined,
-              color: AppColors.primaryNavy,
+              color: AppColors.accentTealHover,
               size: 20,
             ),
             const SizedBox(width: 8),
@@ -109,7 +109,7 @@ class _BlokirRekeningScreenState extends State<BlokirRekeningScreen> {
               'Prosedur Buka Blokir',
               style: GoogleFonts.inter(
                 fontSize: 15,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -156,54 +156,50 @@ class _BlokirRekeningScreenState extends State<BlokirRekeningScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'Blokir Rekening Darurat',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
+      body: Column(
+        children: [
+          PageHeader(
+            title: 'Blokir Rekening Darurat',
+            subtitle: 'Fitur keamanan pembekuan rekening instan',
+            showBackButton: Navigator.canPop(context),
+            onBack: () => Navigator.maybePop(context),
           ),
-        ),
-        backgroundColor: AppColors.primaryNavy,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              // Status Card
-              _buildStatusCard(),
-              const SizedBox(height: 16),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Status Card
+                  _buildStatusCard(),
+                  const SizedBox(height: 16),
 
-              // Action Button
-              if (!_isBlocked)
-                PrimaryButton(
-                  text: 'Blokir Rekening Sekarang',
-                  icon: Icons.shield_rounded,
-                  backgroundColor: AppColors.danger,
-                  textColor: Colors.white,
-                  isLoading: _isProcessing,
-                  onPressed: _isProcessing ? null : _freezeAccount,
-                )
-              else
-                PrimaryButton(
-                  text: 'Ajukan Buka Blokir ke Petugas',
-                  icon: Icons.support_agent_rounded,
-                  backgroundColor: AppColors.primaryNavy,
-                  textColor: Colors.white,
-                  onPressed: _showUnfreezeInfo,
-                ),
-              const SizedBox(height: 20),
+                  // Action Button
+                  if (!_isBlocked)
+                    PrimaryButton(
+                      text: 'Blokir Rekening Sekarang',
+                      icon: Icons.shield_rounded,
+                      backgroundColor: AppColors.danger,
+                      textColor: Colors.white,
+                      isLoading: _isProcessing,
+                      onPressed: _isProcessing ? null : _freezeAccount,
+                    )
+                  else
+                    PrimaryButton(
+                      text: 'Ajukan Buka Blokir ke Petugas',
+                      icon: Icons.support_agent_rounded,
+                      backgroundColor: AppColors.accentTeal,
+                      textColor: Colors.white,
+                      onPressed: _showUnfreezeInfo,
+                    ),
+                  const SizedBox(height: 16),
 
-              // Info Section
-              _buildInfoSection(),
-            ],
+                  // Info Section
+                  _buildInfoSection(),
+                ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -220,6 +216,7 @@ class _BlokirRekeningScreenState extends State<BlokirRekeningScreen> {
               ? AppColors.danger.withValues(alpha: 0.3)
               : AppColors.border,
         ),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Column(
         children: [
@@ -239,12 +236,11 @@ class _BlokirRekeningScreenState extends State<BlokirRekeningScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            _isBlocked ? 'STATUS REKENING: DIBLOKIR' : 'STATUS REKENING: AKTIF',
+            _isBlocked ? 'Status Rekening: Dibekukan' : 'Status Rekening: Aktif',
             style: GoogleFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
               color: _isBlocked ? AppColors.danger : AppColors.success,
-              letterSpacing: 0.5,
             ),
           ),
           const SizedBox(height: 6),
@@ -271,6 +267,7 @@ class _BlokirRekeningScreenState extends State<BlokirRekeningScreen> {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,7 +276,7 @@ class _BlokirRekeningScreenState extends State<BlokirRekeningScreen> {
             children: [
               const Icon(
                 Icons.info_outline_rounded,
-                color: AppColors.primaryNavy,
+                color: AppColors.accentTealHover,
                 size: 18,
               ),
               const SizedBox(width: 8),
@@ -287,7 +284,7 @@ class _BlokirRekeningScreenState extends State<BlokirRekeningScreen> {
                 'Informasi Protokol Keamanan (SOP-09)',
                 style: GoogleFonts.inter(
                   fontSize: 13,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
               ),
@@ -325,11 +322,10 @@ class _BlokirRekeningScreenState extends State<BlokirRekeningScreen> {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: AppColors.surfaceMuted,
+              color: AppColors.greenLight,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: AppColors.border),
             ),
-            child: Icon(icon, color: AppColors.primaryNavy, size: 15),
+            child: Icon(icon, color: AppColors.accentTealHover, size: 15),
           ),
           const SizedBox(width: 10),
           Expanded(

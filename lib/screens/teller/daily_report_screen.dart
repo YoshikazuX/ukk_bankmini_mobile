@@ -134,8 +134,8 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
         ),
         backgroundColor: AppColors.primaryNavy,
         elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
+        centerTitle: false,
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
       body: SafeArea(
         child: _isLoading

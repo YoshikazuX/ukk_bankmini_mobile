@@ -216,7 +216,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryNavy,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         leading: Padding(
           padding:
@@ -259,8 +259,8 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                     namaPetugas,
                     style: GoogleFonts.inter(
                       fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -273,7 +273,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
               'Pengawas Sistem & Infrastruktur Bank Mini',
               style: GoogleFonts.inter(
                 fontSize: 11,
-                color: Colors.white70,
+                color: AppColors.textSecondary,
               ),
             ),
           ],
@@ -286,10 +286,10 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: AppColors.accentTeal,
+                      color: AppColors.accentTealHover,
                     ),
                   )
-                : const Icon(Icons.refresh_rounded, color: Colors.white),
+                : const Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
             tooltip: 'Uji Latensi Server',
             onPressed: () {
               _checkServer();
@@ -297,7 +297,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.logout_rounded, color: Colors.white70),
+            icon: const Icon(Icons.logout_rounded, color: Color(0xFFDC5656)),
             tooltip: 'Logout Admin',
             onPressed: () => _confirmLogout(context),
           ),
@@ -358,7 +358,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                       IconButton(
                         icon: const Icon(
                           Icons.settings_suggest_outlined,
-                          color: AppColors.primaryNavy,
+                          color: AppColors.accentTealHover,
                           size: 20,
                         ),
                         tooltip: 'Ubah Base URL',
@@ -512,8 +512,8 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                         ProfileAvatar(
                           name: nama,
                           size: 36,
-                          backgroundColor: AppColors.primaryNavy,
-                          textColor: Colors.white,
+                          backgroundColor: AppColors.greenLight,
+                          textColor: AppColors.accentTealHover,
                         ),
                         const SizedBox(width: 12),
                         Expanded(

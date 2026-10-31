@@ -4,6 +4,7 @@ import '../core/theme/app_theme.dart';
 import '../core/utils/helpers.dart';
 import '../widgets/common/app_buttons.dart';
 import '../widgets/common/app_inputs.dart';
+import '../widgets/common/app_states.dart';
 
 /// Halaman Lupa Password untuk Nasabah
 /// Nasabah TIDAK menggunakan OTP. Hanya bisa:
@@ -36,36 +37,32 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.primaryNavy,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(
-          'Pemulihan Akses Akun',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
+      body: Column(
+        children: [
+          PageHeader(
+            title: 'Pemulihan Akses Akun',
+            subtitle: 'Layanan reset kredensial dan bantuan akun siswa',
+            showBackButton: Navigator.canPop(context),
+            onBack: () => Navigator.maybePop(context),
           ),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeaderCard(),
-              const SizedBox(height: 16),
-              _buildTabSelector(),
-              const SizedBox(height: 16),
-              _selectedTab == 0 ? _buildWhatsAppCard() : _buildTicketCard(),
-              const SizedBox(height: 24),
-              _buildFooter(),
-            ],
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeaderCard(),
+                  const SizedBox(height: 16),
+                  _buildTabSelector(),
+                  const SizedBox(height: 16),
+                  _selectedTab == 0 ? _buildWhatsAppCard() : _buildTicketCard(),
+                  const SizedBox(height: 24),
+                  _buildFooter(),
+                ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -92,12 +89,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
                 ),
                 child: Text(
-                  'LAYANAN KEAMANAN NASABAH',
+                  'Layanan Keamanan Akun',
                   style: GoogleFonts.inter(
                     fontSize: 10,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.warning,
-                    letterSpacing: 0.5,
                   ),
                 ),
               ),
@@ -168,7 +164,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryNavy : Colors.transparent,
+          color: isSelected ? AppColors.greenLight : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -177,7 +173,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? Colors.white : AppColors.textSecondary,
+              color: isSelected ? AppColors.accentTealHover : AppColors.textSecondary,
             ),
             const SizedBox(width: 8),
             Text(
@@ -185,7 +181,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? Colors.white : AppColors.textSecondary,
+                color: isSelected ? AppColors.accentTealHover : AppColors.textSecondary,
               ),
             ),
           ],

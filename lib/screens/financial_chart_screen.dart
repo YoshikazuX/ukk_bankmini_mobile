@@ -87,7 +87,7 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
         body: const Center(
           child: CircularProgressIndicator(
             strokeWidth: 2.5,
-            color: AppColors.primaryNavy,
+            color: AppColors.accentTealHover,
           ),
         ),
       );
@@ -145,7 +145,7 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
       appBar: _buildAppBar(),
       body: SafeArea(
         child: RefreshIndicator(
-          color: AppColors.primaryNavy,
+          color: AppColors.accentTealHover,
           onRefresh: _fetchLiveData,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -240,26 +240,33 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: Text(
-        'Grafik & Analisis Keuangan',
-        style: GoogleFonts.inter(
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-        ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Grafik & Analisis Keuangan',
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          Text(
+            'Pertumbuhan saldo dan arus kas siswa',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
       ),
-      backgroundColor: AppColors.primaryNavy,
+      backgroundColor: AppColors.surface,
       elevation: 0,
-      centerTitle: true,
-      iconTheme: const IconThemeData(color: Colors.white),
+      centerTitle: false,
+      iconTheme: const IconThemeData(color: AppColors.textPrimary),
       actions: [
         IconButton(
-          icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-          tooltip: 'Segarkan',
-          onPressed: _fetchLiveData,
-        ),
-        IconButton(
-          icon: const Icon(Icons.info_outline_rounded, color: Colors.white),
+          icon: const Icon(Icons.info_outline_rounded, color: AppColors.textSecondary, size: 20),
           tooltip: 'Panduan Grafik',
           onPressed: () => _showChartInfoDialog(context),
         ),
@@ -308,7 +315,7 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
               child: _miniMetricCard(
                 label: 'Tabungan Bersih',
                 value: formatRupiah(netTabungan),
-                color: AppColors.primaryNavy,
+                color: AppColors.accentTealHover,
               ),
             ),
             const SizedBox(width: 8),
@@ -377,9 +384,9 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
           const SizedBox(height: 8),
           Text(
             value,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.jetBrainsMono(
               fontSize: 14,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
@@ -423,9 +430,9 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
           const SizedBox(height: 3),
           Text(
             value,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.jetBrainsMono(
               fontSize: 11,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: color,
             ),
             maxLines: 1,
@@ -539,7 +546,7 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryNavy : Colors.transparent,
+          color: isSelected ? AppColors.greenLight : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
@@ -548,15 +555,15 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
             Icon(
               icon,
               size: 15,
-              color: isSelected ? Colors.white : AppColors.textSecondary,
+              color: isSelected ? AppColors.accentTealHover : AppColors.textSecondary,
             ),
             const SizedBox(width: 6),
             Text(
               title,
               style: GoogleFonts.inter(
                 fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? Colors.white : AppColors.textSecondary,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? AppColors.accentTealHover : AppColors.textSecondary,
               ),
             ),
           ],
@@ -573,10 +580,10 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryNavy : AppColors.surface,
+          color: isSelected ? AppColors.greenLight : AppColors.surface,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: isSelected ? AppColors.primaryNavy : AppColors.border,
+            color: isSelected ? AppColors.accentTealHover : AppColors.border,
             width: 1,
           ),
         ),
@@ -584,8 +591,8 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
           label,
           style: GoogleFonts.inter(
             fontSize: 11,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            color: isSelected ? AppColors.accentTealHover : AppColors.textSecondary,
           ),
         ),
       ),
@@ -875,7 +882,7 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            color: AppColors.primaryNavy,
+            color: AppColors.accentTealHover,
             barWidth: 2.5,
             isStrokeCapRound: true,
             dotData: FlDotData(
@@ -883,7 +890,7 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
               getDotPainter: (spot, percent, barData, index) {
                 return FlDotCirclePainter(
                   radius: 3.5,
-                  color: AppColors.primaryNavy,
+                  color: AppColors.accentTealHover,
                   strokeWidth: 2,
                   strokeColor: Colors.white,
                 );
@@ -891,14 +898,7 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
             ),
             belowBarData: BarAreaData(
               show: true,
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primaryNavy.withValues(alpha: 0.15),
-                  AppColors.primaryNavy.withValues(alpha: 0.0),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+              color: AppColors.accentTeal.withValues(alpha: 0.1),
             ),
           ),
         ],
@@ -1110,7 +1110,7 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
         title: Row(
           children: [
             const Icon(Icons.insights_rounded,
-                color: AppColors.primaryNavy, size: 20),
+                color: AppColors.accentTealHover, size: 20),
             const SizedBox(width: 8),
             Text(
               'Info Analisis Finansial',
@@ -1139,8 +1139,8 @@ class _FinancialChartScreenState extends State<FinancialChartScreen> {
             child: Text(
               'Mengerti',
               style: GoogleFonts.inter(
-                color: AppColors.primaryNavy,
-                fontWeight: FontWeight.w700,
+                color: AppColors.accentTealHover,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),

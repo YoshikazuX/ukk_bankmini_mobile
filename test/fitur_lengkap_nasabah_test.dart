@@ -6,7 +6,6 @@ import 'package:ukk_bankmini/models/nasabah_model.dart';
 import 'package:ukk_bankmini/models/notifikasi_model.dart';
 import 'package:ukk_bankmini/models/saving_goal_model.dart';
 import 'package:ukk_bankmini/models/session_model.dart';
-import 'package:ukk_bankmini/services/nasabah_api_service.dart';
 import 'test_api_mock_interceptor.dart';
 
 void main() {

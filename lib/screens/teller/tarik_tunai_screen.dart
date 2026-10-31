@@ -463,7 +463,7 @@ class _TarikTunaiScreenState extends State<TarikTunaiScreen> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: isHighlight ? FontWeight.w700 : FontWeight.w600,
-                color: isHighlight ? AppColors.primaryNavy : AppColors.textPrimary,
+                color: isHighlight ? AppColors.accentTealHover : AppColors.textPrimary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -492,8 +492,8 @@ class _TarikTunaiScreenState extends State<TarikTunaiScreen> {
         ),
         backgroundColor: AppColors.primaryNavy,
         elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
+        centerTitle: false,
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
       body: SafeArea(
         child: SingleChildScrollView(

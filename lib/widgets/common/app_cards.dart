@@ -6,7 +6,7 @@ import '../../core/utils/helpers.dart';
 
 enum StatusBadgeType { success, warning, danger, info }
 
-/// Badge Status Transaksi & Kehadiran Perbankan
+/// Badge Status Transaksi & Kehadiran Perbankan (No Slop, Clean Hairline)
 class StatusBadge extends StatelessWidget {
   final String label;
   final Color? color;
@@ -103,7 +103,7 @@ class StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: activeBg,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: activeColor.withValues(alpha: 0.25), width: 1),
+        border: Border.all(color: activeColor.withValues(alpha: 0.2), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -116,9 +116,9 @@ class StatusBadge extends StatelessWidget {
             label,
             style: GoogleFonts.inter(
               fontSize: 10,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: activeColor,
-              letterSpacing: 0.2,
+              letterSpacing: 0.1,
             ),
           ),
         ],
@@ -127,7 +127,7 @@ class StatusBadge extends StatelessWidget {
   }
 }
 
-/// Balance Card Hero Nasabah Siswa (Modern Institutional Navy)
+/// Balance Card Hero Nasabah Siswa (Green Primary - Solid Flat, No Gradients)
 class BalanceCard extends StatelessWidget {
   final String namaNasabah;
   final String noRekening;
@@ -157,23 +157,17 @@ class BalanceCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.primaryNavy,
+        color: AppColors.accentTeal,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.secondaryNavy, width: 1.5),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: AppColors.accentTealHover, width: 1),
+        boxShadow: AppColors.heroShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Card: Brand Logo & Status Rekening
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -198,8 +192,8 @@ class BalanceCard extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textOnNavy,
-                        letterSpacing: 0.8,
+                        color: AppColors.textOnGreen,
+                        letterSpacing: 0.6,
                       ),
                     ),
                   ],
@@ -207,7 +201,7 @@ class BalanceCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: (isFrozen ? AppColors.danger : AppColors.accentTeal).withValues(alpha: 0.15),
+                    color: (isFrozen ? AppColors.danger : AppColors.textOnGreen).withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -215,7 +209,7 @@ class BalanceCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: isFrozen ? AppColors.danger : AppColors.accentTeal,
+                      color: isFrozen ? AppColors.danger : AppColors.textOnGreen,
                     ),
                   ),
                 ),
@@ -223,11 +217,11 @@ class BalanceCard extends StatelessWidget {
             ),
           ),
 
-          const Divider(color: Color(0xFF1E2D3D), height: 1),
+          Divider(color: Colors.white.withValues(alpha: 0.22), height: 1),
 
           // Body: Saldo & Info
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -238,7 +232,8 @@ class BalanceCard extends StatelessWidget {
                       'Saldo Efektif Tersedia',
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: AppColors.textOnNavyMuted,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textOnGreen.withValues(alpha: 0.75),
                       ),
                     ),
                     GestureDetector(
@@ -260,11 +255,11 @@ class BalanceCard extends StatelessWidget {
                             style: GoogleFonts.jetBrainsMono(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textOnNavy,
+                              color: AppColors.textOnGreen,
                             ),
                           ),
                           const SizedBox(width: 4),
-                          const Icon(Icons.copy_rounded, size: 13, color: AppColors.accentTeal),
+                          const Icon(Icons.copy_rounded, size: 13, color: AppColors.textOnGreen),
                         ],
                       ),
                     ),
@@ -275,8 +270,8 @@ class BalanceCard extends StatelessWidget {
                   formatRupiah(totalSaldo),
                   style: GoogleFonts.inter(
                     fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textOnNavy,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textOnGreen,
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -287,15 +282,15 @@ class BalanceCard extends StatelessWidget {
                       'Dapat ditarik: ${formatRupiah(saldoDapatDigunakan)}',
                       style: GoogleFonts.inter(
                         fontSize: 11,
-                        color: AppColors.accentTeal,
-                        fontWeight: FontWeight.w500,
+                        color: AppColors.textOnGreen,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
                       ' • Min. simpanan: ${formatRupiah(saldoMinimum)}',
                       style: GoogleFonts.inter(
                         fontSize: 11,
-                        color: AppColors.textOnNavyMuted,
+                        color: AppColors.textOnGreen.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -307,9 +302,9 @@ class BalanceCard extends StatelessWidget {
           // Actions Strip
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: const BoxDecoration(
-              color: Color(0xFF142236),
-              borderRadius: BorderRadius.only(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.16),
+              borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(14),
                 bottomRight: Radius.circular(14),
               ),
@@ -335,14 +330,14 @@ class BalanceCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         child: Row(
           children: [
-            Icon(icon, size: 16, color: AppColors.accentTeal),
+            Icon(icon, size: 16, color: AppColors.textOnGreen),
             const SizedBox(width: 6),
             Text(
               label,
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textOnNavy,
+                color: AppColors.textOnGreen,
               ),
             ),
           ],
@@ -352,7 +347,7 @@ class BalanceCard extends StatelessWidget {
   }
 }
 
-/// Statistic Card Bersih untuk Ringkasan Teller & Supervisor
+/// Statistic Card Bersih untuk Ringkasan Teller & Supervisor (No Gradients)
 class StatisticCard extends StatelessWidget {
   final String title;
   final String value;
@@ -367,7 +362,7 @@ class StatisticCard extends StatelessWidget {
     required this.value,
     this.subtitle,
     required this.icon,
-    this.iconColor = AppColors.primaryNavy,
+    this.iconColor = AppColors.accentTealHover,
     this.iconBgColor,
   });
 
@@ -379,6 +374,7 @@ class StatisticCard extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,7 +398,7 @@ class StatisticCard extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: iconBgColor ?? iconColor.withValues(alpha: 0.1),
+                  color: iconBgColor ?? AppColors.greenLight,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Center(
@@ -416,7 +412,7 @@ class StatisticCard extends StatelessWidget {
             value,
             style: GoogleFonts.inter(
               fontSize: 16,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
               letterSpacing: -0.3,
             ),
@@ -437,7 +433,7 @@ class StatisticCard extends StatelessWidget {
   }
 }
 
-/// Baris Item Transaksi Bersih & Mudah Dipindai
+/// Baris Item Transaksi Bersih & Mudah Dipindai (Jenius Reference Layout)
 class TransactionItem extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -470,6 +466,7 @@ class TransactionItem extends StatelessWidget {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: AppColors.border),
+          boxShadow: AppColors.cardShadow,
         ),
         child: Row(
           children: [
@@ -477,7 +474,9 @@ class TransactionItem extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: amountColor.withValues(alpha: 0.1),
+                color: isDebit
+                    ? AppColors.dangerBg
+                    : AppColors.greenLight,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -520,7 +519,7 @@ class TransactionItem extends StatelessWidget {
                   '$sign${formatRupiah(amount)}',
                   style: GoogleFonts.jetBrainsMono(
                     fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: amountColor,
                   ),
                 ),

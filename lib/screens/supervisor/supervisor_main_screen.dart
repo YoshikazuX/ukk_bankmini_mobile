@@ -134,7 +134,7 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryNavy,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         leading: Padding(
           padding: const EdgeInsets.only(left: 12, top: 10, bottom: 10, right: 2),
@@ -175,8 +175,8 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
                     namaPetugas,
                     style: GoogleFonts.inter(
                       fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -189,14 +189,14 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
               '$jabatan • Otorisasi Kas & Approval Laporan',
               style: GoogleFonts.inter(
                 fontSize: 11,
-                color: Colors.white70,
+                color: AppColors.textSecondary,
               ),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+            icon: const Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
             tooltip: 'Segarkan Data',
             onPressed: () {
               switch (_currentIndex) {
@@ -216,7 +216,7 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.logout_rounded, color: Colors.white70),
+            icon: const Icon(Icons.logout_rounded, color: Color(0xFFDC5656)),
             tooltip: 'Logout Supervisor',
             onPressed: () => _confirmLogout(context),
           ),
@@ -301,9 +301,10 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.primaryNavy,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primaryNavyLight),
+                border: Border.all(color: AppColors.border),
+                boxShadow: AppColors.cardShadow,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -317,7 +318,7 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.accentTeal,
+                            color: AppColors.accentTealHover,
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -326,8 +327,8 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
                           'Persetujuan & Monitoring Kas',
                           style: GoogleFonts.inter(
                             fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -335,7 +336,7 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
                           'Prinsip Maker-Checker Perbankan Mikro',
                           style: GoogleFonts.inter(
                             fontSize: 11,
-                            color: Colors.white70,
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -584,7 +585,7 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.primaryNavy,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ],
@@ -870,7 +871,7 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.primaryNavy,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
@@ -1545,9 +1546,10 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.primaryNavy,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.primaryNavyLight),
+              border: Border.all(color: AppColors.border),
+              boxShadow: AppColors.cardShadow,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1793,7 +1795,7 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
           style: GoogleFonts.inter(
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            color: isSelected ? AppColors.accentTealHover : AppColors.textSecondary,
           ),
         ),
       ),
@@ -1874,7 +1876,7 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
           children: [
             Icon(
               isSelected ? iconFilled : iconOutline,
-              color: isSelected ? AppColors.primaryNavy : AppColors.textSecondary,
+              color: isSelected ? AppColors.accentTealHover : AppColors.textSecondary,
               size: 22,
             ),
             const SizedBox(height: 4),
@@ -1882,8 +1884,8 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
               label,
               style: GoogleFonts.inter(
                 fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? AppColors.primaryNavy : AppColors.textSecondary,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? AppColors.accentTealHover : AppColors.textSecondary,
               ),
             ),
           ],

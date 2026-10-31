@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
 
-/// Tombol Utama (CTA) dengan Aksen Teal Institusional
+/// Tombol Utama (CTA) dengan Aksen Hijau/Teal Institusional (No Gradients)
 class PrimaryButton extends StatelessWidget {
   final String? text;
   final String? label;
@@ -37,8 +37,9 @@ class PrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor ?? AppColors.accentTeal,
-          foregroundColor: textColor ?? AppColors.primaryNavy,
+          foregroundColor: textColor ?? Colors.white,
           elevation: 0,
+          shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -51,7 +52,7 @@ class PrimaryButton extends StatelessWidget {
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.2,
-                  color: textColor ?? AppColors.primaryNavy,
+                  color: textColor ?? Colors.white,
                 ),
               )
             : Row(
@@ -67,8 +68,8 @@ class PrimaryButton extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: textColor ?? AppColors.primaryNavy,
-                      letterSpacing: 0.1,
+                      color: textColor ?? Colors.white,
+                      letterSpacing: -0.1,
                     ),
                   ),
                 ],
@@ -113,9 +114,10 @@ class SecondaryButton extends StatelessWidget {
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
           backgroundColor: AppColors.surface,
-          foregroundColor: textColor ?? AppColors.primaryNavy,
+          foregroundColor: textColor ?? AppColors.textPrimary,
           elevation: 0,
-          side: BorderSide(color: borderColor ?? AppColors.border, width: 1.2),
+          shadowColor: Colors.transparent,
+          side: BorderSide(color: borderColor ?? AppColors.border, width: 1),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -128,7 +130,7 @@ class SecondaryButton extends StatelessWidget {
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.2,
-                  color: textColor ?? AppColors.primaryNavy,
+                  color: textColor ?? AppColors.textPrimary,
                 ),
               )
             : Row(
@@ -136,7 +138,7 @@ class SecondaryButton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, size: 18, color: textColor ?? AppColors.primaryNavy),
+                    Icon(icon, size: 18, color: textColor ?? AppColors.textPrimary),
                     const SizedBox(width: 8),
                   ],
                   Text(
@@ -144,8 +146,8 @@ class SecondaryButton extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: textColor ?? AppColors.primaryNavy,
-                      letterSpacing: 0.1,
+                      color: textColor ?? AppColors.textPrimary,
+                      letterSpacing: -0.1,
                     ),
                   ),
                 ],

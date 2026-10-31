@@ -64,138 +64,127 @@ class _SessionLogScreenState extends State<SessionLogScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'Riwayat Sesi Login',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
+      body: Column(
+        children: [
+          PageHeader(
+            title: 'Riwayat Sesi Login',
+            subtitle: 'Daftar perangkat dan audit keamanan akun',
+            showBackButton: Navigator.canPop(context),
+            onBack: () => Navigator.maybePop(context),
           ),
-        ),
-        backgroundColor: AppColors.primaryNavy,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-            tooltip: 'Segarkan Sesi',
-            onPressed: _fetchSessions,
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: RefreshIndicator(
-          color: AppColors.primaryNavy,
-          onRefresh: _fetchSessions,
-          child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: AppColors.primaryNavy,
-                  ),
-                )
-              : _errorMessage != null
-                  ? SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Container(
-                        padding: const EdgeInsets.all(24),
-                        alignment: Alignment.center,
-                        child: ErrorState(
-                          title: 'Gagal Memuat Sesi',
-                          message: _errorMessage!,
-                          onRetry: _fetchSessions,
-                        ),
+          Expanded(
+            child: RefreshIndicator(
+              color: AppColors.accentTealHover,
+              onRefresh: _fetchSessions,
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: AppColors.accentTealHover,
                       ),
                     )
-                  : SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Info Card
-                          Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primaryNavy
-                                        .withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Icon(
-                                    Icons.security_outlined,
-                                    color: AppColors.primaryNavy,
-                                    size: 20,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Audit Keamanan Perangkat',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.textPrimary,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        'Daftar sesi terotentikasi Laravel Sanctum yang terhubung ke akun Anda.',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11,
-                                          color: AppColors.textSecondary,
-                                          height: 1.3,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                  : _errorMessage != null
+                      ? SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: Container(
+                            padding: const EdgeInsets.all(24),
+                            alignment: Alignment.center,
+                            child: ErrorState(
+                              title: 'Gagal Memuat Sesi',
+                              message: _errorMessage!,
+                              onRetry: _fetchSessions,
                             ),
                           ),
-                          const SizedBox(height: 20),
-
-                          Text(
-                            'Perangkat & Sesi Terdaftar (${_sessions.length})',
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-
-                          if (_sessions.isEmpty)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 40),
-                              child: EmptyState(
-                                icon: Icons.devices_outlined,
-                                title: 'Belum Ada Riwayat Sesi',
-                                message:
-                                    'Sesi aktif Anda akan dicatat di server backend Laravel.',
+                        )
+                      : SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Info Card (Nested radius 14)
+                              Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(color: AppColors.border),
+                                  boxShadow: AppColors.cardShadow,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.greenLight,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.security_outlined,
+                                        color: AppColors.accentTealHover,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Audit Keamanan Perangkat',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.textPrimary,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'Daftar sesi terotentikasi Laravel Sanctum yang terhubung ke akun Anda',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 11,
+                                              color: AppColors.textSecondary,
+                                              height: 1.3,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            )
-                          else
-                            ..._sessions.map((session) => _sessionCard(session)),
-                        ],
-                      ),
-                    ),
-        ),
+                              const SizedBox(height: 16),
+
+                              Text(
+                                'Perangkat & Sesi Terdaftar (${_sessions.length})',
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+
+                              if (_sessions.isEmpty)
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 40),
+                                  child: EmptyState(
+                                    icon: Icons.devices_outlined,
+                                    title: 'Belum Ada Riwayat Sesi',
+                                    message:
+                                        'Sesi aktif Anda akan dicatat di server backend Laravel.',
+                                  ),
+                                )
+                              else
+                                ..._sessions.map((session) => _sessionCard(session)),
+                            ],
+                          ),
+                        ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -247,7 +236,7 @@ class _SessionLogScreenState extends State<SessionLogScreen> {
                 child: Icon(
                   deviceIcon,
                   color: isCurrent
-                      ? AppColors.primaryNavy
+                      ? AppColors.accentTealHover
                       : AppColors.textSecondary,
                   size: 20,
                 ),

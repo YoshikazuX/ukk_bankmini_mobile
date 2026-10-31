@@ -104,7 +104,7 @@ class _SavingGoalsScreenState extends State<SavingGoalsScreen> {
                   'Buat Target Tabungan Baru',
                   style: GoogleFonts.inter(
                     fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                 ),
@@ -229,45 +229,34 @@ class _SavingGoalsScreenState extends State<SavingGoalsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'Target Tabungan Impian',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
+      body: Column(
+        children: [
+          PageHeader(
+            title: 'Target Tabungan',
+            subtitle: 'Alokasi dan perencanaan tabungan siswa',
+            showBackButton: Navigator.canPop(context),
+            onBack: () => Navigator.maybePop(context),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.add_rounded, color: AppColors.accentTealHover),
+                tooltip: 'Tambah Target',
+                onPressed: _showAddGoalDialog,
+              ),
+            ],
           ),
-        ),
-        backgroundColor: AppColors.primaryNavy,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-            tooltip: 'Segarkan',
-            onPressed: _fetchGoals,
-          ),
-          IconButton(
-            icon: const Icon(Icons.add_rounded, color: Colors.white),
-            tooltip: 'Tambah Target',
-            onPressed: _showAddGoalDialog,
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: RefreshIndicator(
-          color: AppColors.primaryNavy,
-          onRefresh: _fetchGoals,
-          child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: AppColors.primaryNavy,
-                  ),
-                )
-              : _errorMessage != null
-                  ? SingleChildScrollView(
+          Expanded(
+            child: RefreshIndicator(
+              color: AppColors.accentTealHover,
+              onRefresh: _fetchGoals,
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: AppColors.accentTealHover,
+                      ),
+                    )
+                  : _errorMessage != null
+                      ? SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       child: Container(
                         padding: const EdgeInsets.all(24),
@@ -292,6 +281,7 @@ class _SavingGoalsScreenState extends State<SavingGoalsScreen> {
                               color: AppColors.surface,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: AppColors.border),
+                              boxShadow: AppColors.cardShadow,
                             ),
                             child: Row(
                               children: [
@@ -299,12 +289,12 @@ class _SavingGoalsScreenState extends State<SavingGoalsScreen> {
                                   width: 40,
                                   height: 40,
                                   decoration: BoxDecoration(
-                                    color: AppColors.accentTeal.withValues(alpha: 0.12),
+                                    color: AppColors.greenLight,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: const Icon(
                                     Icons.track_changes_rounded,
-                                    color: AppColors.primaryNavy,
+                                    color: AppColors.accentTealHover,
                                     size: 20,
                                   ),
                                 ),
@@ -317,7 +307,7 @@ class _SavingGoalsScreenState extends State<SavingGoalsScreen> {
                                         'Alokasi Tabungan Terencana',
                                         style: GoogleFonts.inter(
                                           fontSize: 13,
-                                          fontWeight: FontWeight.w700,
+                                          fontWeight: FontWeight.w600,
                                           color: AppColors.textPrimary,
                                         ),
                                       ),
@@ -335,7 +325,7 @@ class _SavingGoalsScreenState extends State<SavingGoalsScreen> {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 16),
 
                           // Empty State jika belum ada target
                           if (_goals.isEmpty)
@@ -346,6 +336,7 @@ class _SavingGoalsScreenState extends State<SavingGoalsScreen> {
                                 color: AppColors.surface,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: AppColors.border),
+                                boxShadow: AppColors.cardShadow,
                               ),
                               child: Center(
                                 child: Column(
@@ -360,7 +351,7 @@ class _SavingGoalsScreenState extends State<SavingGoalsScreen> {
                                       'Belum Ada Target Tabungan',
                                       style: GoogleFonts.inter(
                                         fontSize: 14,
-                                        fontWeight: FontWeight.w700,
+                                        fontWeight: FontWeight.w600,
                                         color: AppColors.textPrimary,
                                       ),
                                     ),
@@ -384,7 +375,7 @@ class _SavingGoalsScreenState extends State<SavingGoalsScreen> {
                               'Target Tabungan Aktif',
                               style: GoogleFonts.inter(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,
                               ),
                             ),
@@ -399,7 +390,7 @@ class _SavingGoalsScreenState extends State<SavingGoalsScreen> {
                               'Target Telah Tercapai',
                               style: GoogleFonts.inter(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.success,
                               ),
                             ),
@@ -409,13 +400,15 @@ class _SavingGoalsScreenState extends State<SavingGoalsScreen> {
                         ],
                       ),
                     ),
-        ),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddGoalDialog,
-        backgroundColor: AppColors.primaryNavy,
+        backgroundColor: AppColors.accentTeal,
         foregroundColor: Colors.white,
-        elevation: 2,
+        elevation: 1,
         child: const Icon(Icons.add_rounded),
       ),
     );
@@ -423,19 +416,20 @@ class _SavingGoalsScreenState extends State<SavingGoalsScreen> {
 
   Widget _goalCard(SavingGoalModel goal) {
     final isCompleted = goal.isCompleted;
-    final color = isCompleted ? AppColors.success : AppColors.accentTeal;
+    final color = isCompleted ? AppColors.success : AppColors.accentTealHover;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isCompleted
               ? AppColors.success.withValues(alpha: 0.3)
               : AppColors.border,
         ),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Row(
         children: [
@@ -445,7 +439,7 @@ class _SavingGoalsScreenState extends State<SavingGoalsScreen> {
             percent: (goal.progressPercent / 100).clamp(0.0, 1.0),
             center: Text(
               '${goal.progressPercent.toStringAsFixed(0)}%',
-              style: GoogleFonts.inter(
+              style: GoogleFonts.jetBrainsMono(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: color,
@@ -469,7 +463,7 @@ class _SavingGoalsScreenState extends State<SavingGoalsScreen> {
                         goal.nama,
                         style: GoogleFonts.inter(
                           fontSize: 13,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
                         ),
                         maxLines: 1,
@@ -478,27 +472,42 @@ class _SavingGoalsScreenState extends State<SavingGoalsScreen> {
                     ),
                     StatusBadge(
                       label: isCompleted ? 'Tercapai' : 'Berjalan',
-                      type: isCompleted
-                          ? StatusBadgeType.success
-                          : StatusBadgeType.info,
+                      color: isCompleted ? AppColors.success : AppColors.accentTealHover,
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  'Terkumpul: ${formatRupiah(goal.currentAmount)}',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      'Terkumpul: ',
+                      style: GoogleFonts.inter(fontSize: 11, color: AppColors.textSecondary),
+                    ),
+                    Text(
+                      formatRupiah(goal.currentAmount),
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  'Target: ${formatRupiah(goal.targetAmount)}',
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    color: AppColors.textSecondary,
-                  ),
+                const SizedBox(height: 1),
+                Row(
+                  children: [
+                    Text(
+                      'Target: ',
+                      style: GoogleFonts.inter(fontSize: 10, color: AppColors.textMuted),
+                    ),
+                    Text(
+                      formatRupiah(goal.targetAmount),
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 10,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

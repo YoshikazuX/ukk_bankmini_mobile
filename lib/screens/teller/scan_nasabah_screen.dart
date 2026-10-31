@@ -303,8 +303,8 @@ class _ScanNasabahScreenState extends State<ScanNasabahScreen> {
         ),
         backgroundColor: AppColors.primaryNavy,
         elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
+        centerTitle: false,
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
         actions: [
           IconButton(
             icon: Icon(

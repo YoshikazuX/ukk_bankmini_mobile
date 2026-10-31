@@ -63,7 +63,7 @@ class _TellerMainScreenState extends State<TellerMainScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryNavy,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         leading: Padding(
           padding: const EdgeInsets.only(left: 12, top: 10, bottom: 10, right: 2),
@@ -80,15 +80,15 @@ class _TellerMainScreenState extends State<TellerMainScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.accentTeal.withValues(alpha: 0.15),
+                    color: AppColors.greenLight,
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     'TELLER POS',
                     style: GoogleFonts.inter(
                       fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.accentTeal,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.accentTealHover,
                     ),
                   ),
                 ),
@@ -97,15 +97,15 @@ class _TellerMainScreenState extends State<TellerMainScreen> {
                   namaPetugas,
                   style: GoogleFonts.inter(
                     fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
             Text(
               'Loket Aktif: $kelas • Sistem Kasir Bank Mini',
-              style: GoogleFonts.inter(fontSize: 11, color: AppColors.textOnNavyMuted),
+              style: GoogleFonts.inter(fontSize: 11, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -120,7 +120,7 @@ class _TellerMainScreenState extends State<TellerMainScreen> {
                   ),
                 )
               : IconButton(
-                  icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
+                  icon: const Icon(Icons.refresh_rounded, color: AppColors.textSecondary, size: 20),
                   tooltip: 'Segarkan Data Loket',
                   onPressed: _fetchTellerData,
                 ),
@@ -178,7 +178,7 @@ class _TellerMainScreenState extends State<TellerMainScreen> {
     final List<dynamic> trxList = _todayTransactions?['data'] as List<dynamic>? ?? [];
 
     return RefreshIndicator(
-      color: AppColors.primaryNavy,
+      color: AppColors.accentTealHover,
       backgroundColor: AppColors.surface,
       onRefresh: _fetchTellerData,
       child: ListView(
@@ -188,9 +188,10 @@ class _TellerMainScreenState extends State<TellerMainScreen> {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: AppColors.primaryNavy,
+              color: AppColors.accentTeal,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.secondaryNavy, width: 1.5),
+              border: Border.all(color: AppColors.accentTealHover, width: 1),
+              boxShadow: AppColors.heroShadow,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,22 +204,22 @@ class _TellerMainScreenState extends State<TellerMainScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textOnNavyMuted,
-                        letterSpacing: 0.8,
+                        color: AppColors.textOnGreen,
+                        letterSpacing: 0.6,
                       ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: AppColors.accentTeal.withValues(alpha: 0.15),
+                        color: Colors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         'Online POS',
                         style: GoogleFonts.inter(
                           fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.accentTeal,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textOnGreen,
                         ),
                       ),
                     ),
@@ -229,15 +230,15 @@ class _TellerMainScreenState extends State<TellerMainScreen> {
                   formatRupiah(kasTersedia),
                   style: GoogleFonts.inter(
                     fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textOnGreen,
                     letterSpacing: -0.5,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   'Modal Kas Awal: ${formatRupiah(saldoAwal)} • Siap Melayani Nasabah',
-                  style: GoogleFonts.inter(fontSize: 11, color: AppColors.textOnNavyMuted),
+                  style: GoogleFonts.inter(fontSize: 11, color: AppColors.textOnGreen.withValues(alpha: 0.75)),
                 ),
               ],
             ),
@@ -318,7 +319,7 @@ class _TellerMainScreenState extends State<TellerMainScreen> {
                   icon: Icons.qr_code_scanner_rounded,
                   title: 'Scan QR Siswa',
                   subtitle: 'Pindai Kartu Digital',
-                  color: AppColors.primaryNavy,
+                  color: AppColors.accentTealHover,
                   onTap: () async {
                     final res = await Navigator.push<bool>(
                       context,
@@ -360,7 +361,7 @@ class _TellerMainScreenState extends State<TellerMainScreen> {
                 onTap: () => setState(() => _currentIndex = 1),
                 child: Text(
                   'Lihat Semua',
-                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primaryNavy),
+                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.accentTealHover),
                 ),
               ),
             ],
@@ -477,7 +478,7 @@ class _TellerMainScreenState extends State<TellerMainScreen> {
         ),
         Expanded(
           child: RefreshIndicator(
-            color: AppColors.primaryNavy,
+            color: AppColors.accentTealHover,
             backgroundColor: AppColors.surface,
             onRefresh: _fetchTellerData,
             child: trxList.isEmpty
@@ -516,22 +517,19 @@ class _TellerMainScreenState extends State<TellerMainScreen> {
 
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isSelected = _currentIndex == index;
-    return GestureDetector(
+    return InkWell(
       onTap: () => setState(() => _currentIndex = index),
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+      borderRadius: BorderRadius.circular(8),
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryNavy.withValues(alpha: 0.08) : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              color: isSelected ? AppColors.primaryNavy : AppColors.textMuted,
+              color: isSelected ? AppColors.accentTealHover : AppColors.textSecondary,
               size: 20,
             ),
             const SizedBox(height: 3),
@@ -540,7 +538,7 @@ class _TellerMainScreenState extends State<TellerMainScreen> {
               style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? AppColors.primaryNavy : AppColors.textMuted,
+                color: isSelected ? AppColors.accentTealHover : AppColors.textSecondary,
               ),
             ),
           ],

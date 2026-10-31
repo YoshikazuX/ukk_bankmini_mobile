@@ -4,6 +4,7 @@ import '../core/theme/app_theme.dart';
 import '../core/utils/helpers.dart';
 import '../widgets/common/app_buttons.dart';
 import '../widgets/common/app_inputs.dart';
+import '../widgets/common/app_states.dart';
 
 /// Halaman Pusat Bantuan & FAQ Literasi Keuangan (Production)
 class HelpCenterScreen extends StatefulWidget {
@@ -72,63 +73,58 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'Pusat Bantuan & FAQ',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
+      body: Column(
+        children: [
+          PageHeader(
+            title: 'Pusat Bantuan & FAQ',
+            subtitle: 'Panduan teknis dan operasional Bank Mini Sekolah',
+            showBackButton: Navigator.canPop(context),
+            onBack: () => Navigator.maybePop(context),
           ),
-        ),
-        backgroundColor: AppColors.primaryNavy,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header Search Card
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryNavy,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.secondaryNavy),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Pusat Panduan & Edukasi Siswa',
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Search Card (Quiet Surface Card)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.border),
+                      boxShadow: AppColors.cardShadow,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Cari jawaban seputar transaksi, rekening, dan operasional Bank Mini.',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: Colors.white70,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Pusat Panduan & Edukasi Siswa',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Cari jawaban seputar transaksi, rekening, dan operasional Bank Mini',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SearchField(
+                          controller: _searchController,
+                          hint: 'Cari pertanyaan atau kata kunci...',
+                          onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
+                          onClear: () => setState(() => _searchQuery = ''),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    SearchField(
-                      controller: _searchController,
-                      hint: 'Cari pertanyaan atau kata kunci...',
-                      onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
-                      onClear: () => setState(() => _searchQuery = ''),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
               const SizedBox(height: 20),
 
               // FAQ Categories
@@ -150,12 +146,11 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      (category['category'] as String).toUpperCase(),
+                      category['category'] as String,
                       style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primaryNavy,
-                        letterSpacing: 0.8,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -170,9 +165,11 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
 
               // Contact Admin
               _buildContactAdmin(),
-            ],
+                ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -194,7 +191,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
           tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
           childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
           expandedCrossAxisAlignment: CrossAxisAlignment.start,
-          iconColor: AppColors.primaryNavy,
+          iconColor: AppColors.accentTealHover,
           collapsedIconColor: AppColors.textSecondary,
           title: Text(
             question,
@@ -243,7 +240,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.primaryNavy.withValues(alpha: 0.08),
+              color: AppColors.greenLight,
               shape: BoxShape.circle,
             ),
             child: const Icon(

@@ -243,7 +243,7 @@ class _SetorTunaiScreenState extends State<SetorTunaiScreen> {
           style: GoogleFonts.inter(
             fontSize: isHighlight ? 13 : 11,
             fontWeight: isHighlight ? FontWeight.w700 : FontWeight.w600,
-            color: isHighlight ? AppColors.primaryNavy : AppColors.textPrimary,
+            color: isHighlight ? AppColors.accentTealHover : AppColors.textPrimary,
           ),
         ),
       ],

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Palet warna resmi LKM Mitra Siswa Abadi
-/// Modern Institutional Banking Interface
+/// Modern Institutional Banking Interface - Green Primary (No Gradients)
 class AppColors {
   AppColors._();
 
@@ -10,22 +10,28 @@ class AppColors {
   // DESIGN TOKENS RESMI WEBSITE LKM MITRA SISWA ABADI
   // =========================================================================
 
-  /// Primary Navy: Identitas institusi & elemen navigasi utama
-  static const Color primaryNavy = Color(0xFF101B2D);
-
-  /// Primary Navy Light: Varian navy sedikit lebih terang untuk border & sub-header
-  static const Color primaryNavyLight = Color(0xFF1E3A5F);
-
-  /// Secondary Navy: Aksen permukaan navy gelap, header sub-menu
-  static const Color secondaryNavy = Color(0xFF172538);
-
-  /// Accent Teal: Tombol utama (CTA), link aktif, highlight perbankan
+  /// Primary Accent: Warna hijau utama dari login page (CTA, active, highlight)
   static const Color accentTeal = Color(0xFF19C9A3);
 
-  /// Accent Teal Hover/Pressed: Interaksi tombol aktif
-  static const Color accentTealHover = Color(0xFF12B892);
+  /// Primary Accent Hover / Deeper: Kontras tinggi di atas permukaan putih
+  static const Color accentTealHover = Color(0xFF008F83);
 
-  /// Background: Kanvas utama abu-abu netral perbankan modern
+  /// Dark Green untuk kontras teks di atas permukaan putih (WCAG AA compliant)
+  static const Color greenDark = Color(0xFF0F766E);
+
+  /// Green Muted / Tinted Background (untuk pill & chip aktif)
+  static const Color greenLight = Color(0xFFE6F8F3);
+
+  /// Primary Navy: Identitas institusi pendukung & teks pada tombol hijau
+  static const Color primaryNavy = Color(0xFF101B2D);
+
+  /// Primary Navy Light: Varian navy untuk border & kartu sekunder
+  static const Color primaryNavyLight = Color(0xFF1E3A5F);
+
+  /// Secondary Navy: Aksen permukaan navy gelap
+  static const Color secondaryNavy = Color(0xFF172538);
+
+  /// Background: Kanvas utama abu-abu netral perbankan modern (Unslop Ink Light)
   static const Color background = Color(0xFFF5F7FA);
 
   /// Surface: Kartu konten, modul form, modal (Putih Bersih)
@@ -35,7 +41,9 @@ class AppColors {
   static const Color surfaceMuted = Color(0xFFF8FAFC);
 
   /// Primary Text: Teks judul, label utama, dan nominal penting (Navy Gelap)
-  static const Color textPrimary = Color(0xFF152238);
+  static const Color textPrimary = Color(0xFF1D2B45);
+  static const Color textAccent = Color(0xFF008F83);
+  static const Color textDisabled = Color(0xFFA0AEC0);
 
   /// Secondary Text: Subtitle, keterangan, timestamp (Slate Gray)
   static const Color textSecondary = Color(0xFF64748B);
@@ -43,11 +51,15 @@ class AppColors {
   /// Text Muted / Hint: Placeholder, keterangan non-aktif
   static const Color textMuted = Color(0xFF94A3B8);
 
-  /// Teks di atas latar belakang Navy
+  /// Teks di atas latar belakang Navy / Dark Card
   static const Color textOnNavy = Color(0xFFFFFFFF);
   static const Color textOnNavyMuted = Color(0xFF94A3B8);
 
-  /// Border: Garis pembatas tipis, rapi, dan konsisten
+  /// Teks di atas latar belakang Green (Putih Bersih agar terang dan tidak nabrak)
+  static const Color textOnGreen = Color(0xFFFFFFFF);
+  static const Color textOnGreenMuted = Color(0xD9FFFFFF);
+
+  /// Border: Garis pembatas tipis, rapi, dan konsisten (Hairline)
   static const Color border = Color(0xFFE2E8F0);
   static const Color borderLight = Color(0xFFEDF2F7);
   static const Color borderFocus = Color(0xFF19C9A3);
@@ -73,6 +85,33 @@ class AppColors {
   static const Color infoBg = Color(0xFFE3F2FD);
 
   // =========================================================================
+  // CARD & CONTAINER SHADOWS (Clean Depth Without Slop)
+  // =========================================================================
+  static const List<BoxShadow> cardShadow = [
+    BoxShadow(
+      color: Color(0x060F172A),
+      blurRadius: 8,
+      offset: Offset(0, 2),
+    ),
+  ];
+
+  static const List<BoxShadow> heroShadow = [
+    BoxShadow(
+      color: Color(0x0A0F172A),
+      blurRadius: 14,
+      offset: Offset(0, 4),
+    ),
+  ];
+
+  static const List<BoxShadow> bottomNavShadow = [
+    BoxShadow(
+      color: Color(0x0A0F172A),
+      blurRadius: 12,
+      offset: Offset(0, -3),
+    ),
+  ];
+
+  // =========================================================================
   // BACKWARDS-COMPATIBILITY ALIASES (Memastikan screen existing tetap jalan)
   // =========================================================================
   static const Color primaryTeal = accentTeal;
@@ -92,21 +131,21 @@ class AppColors {
   static const Color frozenBlue = Color(0xFF3986C8);
   static const Color frozenBackground = Color(0xFFE8F0FE);
 
-  // Gradients for backwards-compatibility
+  // SOLID FLAT COLORS (Gradasi dinonaktifkan sesuai aturan tanpa gradasi)
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [accentTeal, accentTealHover],
+    colors: [accentTeal, accentTeal],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient darkGradient = LinearGradient(
-    colors: [background, surfaceMuted],
+    colors: [surface, surface],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
   static const LinearGradient cardGradient = LinearGradient(
-    colors: [surface, surfaceMuted],
+    colors: [surface, surface],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -137,13 +176,13 @@ class AppTheme {
       textTheme: baseFont.copyWith(
         headlineMedium: GoogleFonts.inter(
           fontSize: 22,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
           letterSpacing: -0.3,
         ),
         titleLarge: GoogleFonts.inter(
           fontSize: 18,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
           letterSpacing: -0.2,
         ),
@@ -154,7 +193,7 @@ class AppTheme {
         ),
         titleSmall: GoogleFonts.inter(
           fontSize: 13,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w500,
           color: AppColors.textPrimary,
         ),
         bodyLarge: GoogleFonts.inter(
@@ -179,14 +218,17 @@ class AppTheme {
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.primaryNavy,
+        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.textPrimary,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: false,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary, size: 20),
         titleTextStyle: GoogleFonts.inter(
-          color: Colors.white,
+          color: AppColors.textPrimary,
           fontSize: 16,
           fontWeight: FontWeight.w600,
+          letterSpacing: -0.2,
         ),
       ),
       cardTheme: CardThemeData(
@@ -236,7 +278,7 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primaryNavy,
+          foregroundColor: AppColors.textPrimary,
           side: const BorderSide(color: AppColors.border),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -248,10 +290,12 @@ class AppTheme {
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        selectedItemColor: AppColors.primaryNavy,
-        unselectedItemColor: AppColors.textMuted,
+        selectedItemColor: AppColors.accentTealHover,
+        unselectedItemColor: AppColors.textSecondary,
+        selectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
         type: BottomNavigationBarType.fixed,
-        elevation: 4,
+        elevation: 0,
       ),
       dividerTheme: const DividerThemeData(
         color: AppColors.border,

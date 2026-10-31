@@ -73,7 +73,7 @@ class _MutasiScreenState extends State<MutasiScreen> {
                   'Rincian Transaksi',
                   style: GoogleFonts.inter(
                     fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                 ),
@@ -112,7 +112,7 @@ class _MutasiScreenState extends State<MutasiScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryNavy,
+                  backgroundColor: AppColors.accentTeal,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -129,6 +129,7 @@ class _MutasiScreenState extends State<MutasiScreen> {
   }
 
   Widget _detailRow(String label, String value, {bool isPrimary = false}) {
+    final isMonospaced = isPrimary || value.startsWith('Rp') || value.startsWith('#');
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -138,11 +139,17 @@ class _MutasiScreenState extends State<MutasiScreen> {
         ),
         Text(
           value,
-          style: GoogleFonts.inter(
-            fontSize: isPrimary ? 16 : 12,
-            fontWeight: isPrimary ? FontWeight.w800 : FontWeight.w600,
-            color: isPrimary ? AppColors.primaryNavy : AppColors.textPrimary,
-          ),
+          style: isMonospaced
+              ? GoogleFonts.jetBrainsMono(
+                  fontSize: isPrimary ? 16 : 12,
+                  fontWeight: isPrimary ? FontWeight.w700 : FontWeight.w600,
+                  color: AppColors.textPrimary,
+                )
+              : GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
         ),
       ],
     );
@@ -164,30 +171,17 @@ class _MutasiScreenState extends State<MutasiScreen> {
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          // Header Bersih Institusional
+          // Header Bersih Institusional (Quiet Chrome)
           PageHeader(
             title: 'Buku Tabungan Digital',
             subtitle: 'Riwayat mutasi transaksi rekening siswa',
             showBackButton: Navigator.canPop(context),
             onBack: () => Navigator.maybePop(context),
-            actions: [
-              IconButton(
-                icon: _isLoading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
-                tooltip: 'Segarkan Riwayat',
-                onPressed: _isLoading ? null : _fetchMutasi,
-              ),
-            ],
           ),
 
-          // Filter Segmented Strip
+          // Filter Segmented Strip (Clean Pill Filter)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: const BoxDecoration(
               color: AppColors.surface,
               border: Border(bottom: BorderSide(color: AppColors.border)),
@@ -224,11 +218,18 @@ class _MutasiScreenState extends State<MutasiScreen> {
           // List Mutasi
           Expanded(
             child: RefreshIndicator(
-              color: AppColors.primaryNavy,
+              color: AppColors.accentTealHover,
               backgroundColor: AppColors.surface,
               onRefresh: _fetchMutasi,
-              child: filteredTransactions.isEmpty
-                  ? ListView(
+              child: _isLoading && _transactions.isEmpty
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: AppColors.accentTealHover,
+                      ),
+                    )
+                  : filteredTransactions.isEmpty
+                      ? ListView(
                       children: const [
                         SizedBox(height: 80),
                         EmptyState(
@@ -267,22 +268,22 @@ class _MutasiScreenState extends State<MutasiScreen> {
     final isSelected = _filterJenis == value;
     return InkWell(
       onTap: () => setState(() => _filterJenis = value),
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryNavy : AppColors.surfaceMuted,
-          borderRadius: BorderRadius.circular(6),
+          color: isSelected ? AppColors.greenLight : AppColors.surfaceMuted,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.primaryNavy : AppColors.border,
+            color: isSelected ? AppColors.accentTealHover : AppColors.border,
           ),
         ),
         child: Text(
           label,
           style: GoogleFonts.inter(
             fontSize: 11,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            color: isSelected ? AppColors.accentTealHover : AppColors.textSecondary,
           ),
         ),
       ),

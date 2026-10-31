@@ -17,7 +17,7 @@ import 'pin_authorization_screen.dart';
 import 'saving_goals_screen.dart';
 import 'session_log_screen.dart';
 
-/// Halaman Profil & Pengaturan Nasabah Siswa
+/// Halaman Profil & Pengaturan Nasabah Siswa (Quiet Chrome, Unslop)
 class ProfileMenuScreen extends StatelessWidget {
   const ProfileMenuScreen({super.key});
 
@@ -39,9 +39,9 @@ class ProfileMenuScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          // Header Bersih Institusional
+          // Header Bersih Institusional (Quiet Chrome)
           PageHeader(
-            title: 'Profil & Pengaturan Nasabah',
+            title: 'Profil & Pengaturan',
             subtitle: 'Informasi identitas dan preferensi keamanan akun',
             showBackButton: Navigator.canPop(context),
             onBack: () => Navigator.maybePop(context),
@@ -56,10 +56,10 @@ class ProfileMenuScreen extends StatelessWidget {
                 children: [
                   // Profile Card
                   _buildProfileCard(nasabah),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 16),
 
                   // Bagian 1: Informasi Rekening
-                  _buildSectionHeader('INFORMASI REKENING & FINANSIAL'),
+                  _buildSectionHeader('Informasi Rekening & Finansial'),
                   _buildMenuGroup([
                     _menuTile(
                       icon: Icons.account_balance_wallet_outlined,
@@ -77,7 +77,7 @@ class ProfileMenuScreen extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Bagian 2: Fitur Siswa
-                  _buildSectionHeader('PROGRAM MENABUNG SISWA'),
+                  _buildSectionHeader('Program Menabung Siswa'),
                   _buildMenuGroup([
                     _menuTile(
                       icon: Icons.savings_outlined,
@@ -95,7 +95,7 @@ class ProfileMenuScreen extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Bagian 3: Keamanan & Autentikasi
-                  _buildSectionHeader('KEAMANAN & PRIVASI AKUN'),
+                  _buildSectionHeader('Keamanan & Privasi Akun'),
                   _buildMenuGroup([
                     _menuTile(
                       icon: Icons.lock_outline_rounded,
@@ -120,7 +120,7 @@ class ProfileMenuScreen extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Bagian 4: Layanan & Bantuan
-                  _buildSectionHeader('BANTUAN & INFORMASI'),
+                  _buildSectionHeader('Bantuan & Informasi'),
                   _buildMenuGroup([
                     _menuTile(
                       icon: Icons.help_outline_rounded,
@@ -142,7 +142,7 @@ class ProfileMenuScreen extends StatelessWidget {
                   SecondaryButton(
                     text: 'Keluar dari Sesi Nasabah',
                     icon: Icons.logout_rounded,
-                    borderColor: AppColors.danger.withValues(alpha: 0.4),
+                    borderColor: AppColors.danger.withValues(alpha: 0.3),
                     textColor: AppColors.danger,
                     onPressed: () => _confirmLogout(context),
                   ),
@@ -182,22 +182,13 @@ class ProfileMenuScreen extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Row(
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: AppColors.primaryNavy,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Text(
-                nasabah.namaLengkap.isNotEmpty ? nasabah.namaLengkap.substring(0, 2).toUpperCase() : 'NA',
-                style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
-              ),
-            ),
+          ProfileAvatar(
+            name: nasabah.namaLengkap,
+            size: 50,
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -206,14 +197,14 @@ class ProfileMenuScreen extends StatelessWidget {
               children: [
                 Text(
                   nasabah.namaLengkap,
-                  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'NIS: ${nasabah.nis} • Rek: ${nasabah.noRekening}',
                   style: GoogleFonts.jetBrainsMono(fontSize: 11, color: AppColors.textSecondary),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
                   '${nasabah.kelas} - ${nasabah.jurusan}',
                   style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted),
@@ -237,9 +228,8 @@ class ProfileMenuScreen extends StatelessWidget {
         title,
         style: GoogleFonts.inter(
           fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textMuted,
-          letterSpacing: 0.6,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textSecondary,
         ),
       ),
     );
@@ -251,13 +241,18 @@ class ProfileMenuScreen extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
+        boxShadow: AppColors.cardShadow,
       ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: children.length,
-        separatorBuilder: (_, index) => const Divider(color: AppColors.border, height: 1),
-        itemBuilder: (_, index) => children[index],
+      child: Column(
+        children: List.generate(children.length, (index) {
+          final isLast = index == children.length - 1;
+          return Column(
+            children: [
+              children[index],
+              if (!isLast) const Divider(color: AppColors.border, height: 1),
+            ],
+          );
+        }),
       ),
     );
   }
@@ -269,17 +264,20 @@ class ProfileMenuScreen extends StatelessWidget {
     Color? color,
     required VoidCallback onTap,
   }) {
-    final effectiveColor = color ?? AppColors.primaryNavy;
+    final effectiveColor = color ?? AppColors.accentTealHover;
+
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
-                color: effectiveColor.withValues(alpha: 0.08),
+                color: (color != null) ? color.withValues(alpha: 0.1) : AppColors.greenLight,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: effectiveColor, size: 18),
@@ -291,17 +289,24 @@ class ProfileMenuScreen extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     desc,
-                    style: GoogleFonts.inter(fontSize: 11, color: AppColors.textSecondary),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 18),
+            const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textMuted),
           ],
         ),
       ),
@@ -309,6 +314,8 @@ class ProfileMenuScreen extends StatelessWidget {
   }
 
   void _showSaldoBottomSheet(BuildContext context, NasabahModel nasabah) {
+    final saldoDapatDigunakan = (nasabah.totalSaldo - nasabah.saldoMengendap).clamp(0, double.infinity).toDouble();
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -326,13 +333,16 @@ class ProfileMenuScreen extends StatelessWidget {
               child: Container(
                 width: 36,
                 height: 4,
-                decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
             const SizedBox(height: 16),
             Text(
-              'Rincian Saldo Rekening',
-              style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+              'Rincian Saldo Tabungan Siswa',
+              style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 14),
             Container(
@@ -344,18 +354,33 @@ class ProfileMenuScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _modalRow('Total Saldo di Buku', formatRupiah(nasabah.totalSaldo), isBold: true),
+                  _saldoRow('Total Saldo Tabungan', formatRupiah(nasabah.totalSaldo), isBold: true, color: AppColors.accentTealHover),
                   const Divider(color: AppColors.border, height: 16),
-                  _modalRow('Saldo Minimum Mengendap', formatRupiah(nasabah.saldoMengendap)),
-                  const SizedBox(height: 8),
-                  _modalRow('Saldo Efektif (Dapat Ditarik)', formatRupiah(nasabah.saldoEfektif), isPrimary: true),
+                  _saldoRow('Saldo Mengendap (Wajib)', formatRupiah(nasabah.saldoMengendap), isBold: false, color: AppColors.textSecondary),
+                  const Divider(color: AppColors.border, height: 16),
+                  _saldoRow('Saldo Efektif (Dapat Ditarik)', formatRupiah(saldoDapatDigunakan), isBold: true, color: AppColors.success),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            PrimaryButton(
-              text: 'Tutup',
-              onPressed: () => Navigator.pop(ctx),
+            const SizedBox(height: 12),
+            Text(
+              'Catatan: Saldo mengendap adalah saldo jaminan pembukaan rekening Bank Mini Sekolah dan tidak dapat ditarik.',
+              style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted, height: 1.3),
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accentTeal,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: () => Navigator.pop(ctx),
+                child: Text('Tutup', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              ),
             ),
           ],
         ),
@@ -363,7 +388,7 @@ class ProfileMenuScreen extends StatelessWidget {
     );
   }
 
-  Widget _modalRow(String label, String value, {bool isBold = false, bool isPrimary = false}) {
+  Widget _saldoRow(String label, String value, {required bool isBold, required Color color}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -371,9 +396,9 @@ class ProfileMenuScreen extends StatelessWidget {
         Text(
           value,
           style: GoogleFonts.jetBrainsMono(
-            fontSize: isPrimary ? 14 : 12,
-            fontWeight: isBold || isPrimary ? FontWeight.w700 : FontWeight.w500,
-            color: isPrimary ? AppColors.primaryNavy : AppColors.textPrimary,
+            fontSize: isBold ? 14 : 12,
+            fontWeight: isBold ? FontWeight.w600 : FontWeight.w500,
+            color: color,
           ),
         ),
       ],
@@ -383,11 +408,11 @@ class ProfileMenuScreen extends StatelessWidget {
   void _confirmLogout(BuildContext context) {
     ConfirmationDialog.show(
       context,
-      title: 'Konfirmasi Logout',
-      message: 'Apakah Anda yakin ingin mengakhiri sesi dan keluar dari aplikasi Bank Mini?',
-      confirmLabel: 'Ya, Logout',
-      confirmColor: AppColors.danger,
-      confirmTextColor: Colors.white,
+      title: 'Keluar dari Sesi',
+      message: 'Apakah Anda yakin ingin keluar dari akun Nasabah Siswa ini? Anda harus masuk kembali dengan kata sandi.',
+      confirmLabel: 'Ya, Keluar',
+      cancelLabel: 'Batal',
+      isDanger: true,
     ).then((confirmed) async {
       if (confirmed == true) {
         await AuthService.logout();

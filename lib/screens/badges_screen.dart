@@ -68,60 +68,47 @@ class _BadgesScreenState extends State<BadgesScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'Lencana Prestasi',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
+      body: Column(
+        children: [
+          PageHeader(
+            title: 'Lencana Prestasi',
+            subtitle: 'Apresiasi literasi dan konsistensi menabung siswa',
+            showBackButton: Navigator.canPop(context),
+            onBack: () => Navigator.maybePop(context),
           ),
-        ),
-        backgroundColor: AppColors.primaryNavy,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-            tooltip: 'Segarkan Lencana',
-            onPressed: _fetchBadges,
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: RefreshIndicator(
-          color: AppColors.primaryNavy,
-          onRefresh: _fetchBadges,
-          child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: AppColors.primaryNavy,
-                  ),
-                )
-              : _errorMessage != null
-                  ? SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Container(
-                        padding: const EdgeInsets.all(24),
-                        alignment: Alignment.center,
-                        child: ErrorState(
-                          title: 'Gagal Memuat Lencana',
-                          message: _errorMessage!,
-                          onRetry: _fetchBadges,
-                        ),
+          Expanded(
+            child: RefreshIndicator(
+              color: AppColors.accentTealHover,
+              onRefresh: _fetchBadges,
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: AppColors.accentTealHover,
                       ),
                     )
-                  : SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Stats Card
-                          _buildStatsCard(unlockedCount, totalCount),
-                          const SizedBox(height: 20),
+                  : _errorMessage != null
+                      ? SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: Container(
+                            padding: const EdgeInsets.all(24),
+                            alignment: Alignment.center,
+                            child: ErrorState(
+                              title: 'Gagal Memuat Lencana',
+                              message: _errorMessage!,
+                              onRetry: _fetchBadges,
+                            ),
+                          ),
+                        )
+                      : SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Stats Card (Clean White Surface with Green Accents)
+                              _buildStatsCard(unlockedCount, totalCount),
+                              const SizedBox(height: 16),
 
                           // Unlocked Badges
                           if (unlockedBadges.isNotEmpty) ...[
@@ -129,13 +116,13 @@ class _BadgesScreenState extends State<BadgesScreen> {
                               'Lencana Telah Diraih (${unlockedBadges.length})',
                               style: GoogleFonts.inter(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 10),
                             ...unlockedBadges.map((b) => _badgeCard(b, true)),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 16),
                           ],
 
                           // Locked Badges
@@ -144,7 +131,7 @@ class _BadgesScreenState extends State<BadgesScreen> {
                               'Tantangan Lencana Berikutnya (${lockedBadges.length})',
                               style: GoogleFonts.inter(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.textSecondary,
                               ),
                             ),
@@ -165,7 +152,9 @@ class _BadgesScreenState extends State<BadgesScreen> {
                         ],
                       ),
                     ),
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -183,11 +172,12 @@ class _BadgesScreenState extends State<BadgesScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primaryNavy,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.secondaryNavy),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,26 +186,25 @@ class _BadgesScreenState extends State<BadgesScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'APRESIASI LITERASI FINANSIAL',
+                'Apresiasi Literasi Finansial',
                 style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.accentTeal,
-                  letterSpacing: 0.5,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.accentTealHover,
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
+                  color: AppColors.greenLight,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   '${(percent * 100).toStringAsFixed(0)}% Selesai',
                   style: GoogleFonts.inter(
                     fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.accentTealHover,
                   ),
                 ),
               ),
@@ -225,9 +214,9 @@ class _BadgesScreenState extends State<BadgesScreen> {
           Text(
             'Koleksi Lencana Menabung Siswa',
             style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 2),
@@ -235,21 +224,21 @@ class _BadgesScreenState extends State<BadgesScreen> {
             'Dapatkan penghargaan atas kedisiplinan dan konsistensi Anda menabung.',
             style: GoogleFonts.inter(
               fontSize: 11,
-              color: Colors.white70,
+              color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: percent,
-              backgroundColor: Colors.white12,
+              backgroundColor: AppColors.greenLight,
               valueColor:
-                  const AlwaysStoppedAnimation<Color>(AppColors.accentTeal),
+                  const AlwaysStoppedAnimation<Color>(AppColors.accentTealHover),
               minHeight: 6,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -257,7 +246,7 @@ class _BadgesScreenState extends State<BadgesScreen> {
                 'Lencana Terbuka: $unlocked dari $total',
                 style: GoogleFonts.inter(
                   fontSize: 11,
-                  color: Colors.white70,
+                  color: AppColors.textSecondary,
                 ),
               ),
               Text(
@@ -265,7 +254,7 @@ class _BadgesScreenState extends State<BadgesScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.accentTeal,
+                  color: AppColors.accentTealHover,
                 ),
               ),
             ],
@@ -304,6 +293,7 @@ class _BadgesScreenState extends State<BadgesScreen> {
               ? tierColor.withValues(alpha: 0.35)
               : AppColors.border,
         ),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Row(
         children: [
@@ -344,7 +334,7 @@ class _BadgesScreenState extends State<BadgesScreen> {
                         badge.nama,
                         style: GoogleFonts.inter(
                           fontSize: 13,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           color: isUnlocked
                               ? AppColors.textPrimary
                               : AppColors.textSecondary,
@@ -365,7 +355,7 @@ class _BadgesScreenState extends State<BadgesScreen> {
                         tierLabel,
                         style: GoogleFonts.inter(
                           fontSize: 9,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           color: isUnlocked ? tierColor : AppColors.textMuted,
                           letterSpacing: 0.5,
                         ),

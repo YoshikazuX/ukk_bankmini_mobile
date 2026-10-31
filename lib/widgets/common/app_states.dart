@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
 import 'app_buttons.dart';
 
-/// Header Halaman Bersih dan Konsisten
+/// Header Halaman Bersih dan Konsisten (Quiet Chrome - Unslop)
 class PageHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
@@ -11,6 +11,7 @@ class PageHeader extends StatelessWidget {
   final VoidCallback? onBack;
   final List<Widget>? actions;
   final Color? backgroundColor;
+  final Color? foregroundColor;
 
   const PageHeader({
     super.key,
@@ -20,16 +21,20 @@ class PageHeader extends StatelessWidget {
     this.onBack,
     this.actions,
     this.backgroundColor,
+    this.foregroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveBg = backgroundColor ?? AppColors.surface;
+    final effectiveFg = foregroundColor ?? AppColors.textPrimary;
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
       decoration: BoxDecoration(
-        color: backgroundColor ?? AppColors.primaryNavy,
+        color: effectiveBg,
         border: const Border(
-          bottom: BorderSide(color: Color(0xFF1E2D3D), width: 1),
+          bottom: BorderSide(color: AppColors.border, width: 1),
         ),
       ),
       child: SafeArea(
@@ -38,10 +43,10 @@ class PageHeader extends StatelessWidget {
           children: [
             if (showBackButton) ...[
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_back_ios_new_rounded,
                   size: 18,
-                  color: Colors.white,
+                  color: effectiveFg,
                 ),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -58,8 +63,9 @@ class PageHeader extends StatelessWidget {
                     title,
                     style: GoogleFonts.inter(
                       fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      color: effectiveFg,
+                      letterSpacing: -0.2,
                     ),
                   ),
                   if (subtitle != null && subtitle!.isNotEmpty) ...[
@@ -68,7 +74,7 @@ class PageHeader extends StatelessWidget {
                       subtitle!,
                       style: GoogleFonts.inter(
                         fontSize: 11,
-                        color: AppColors.textOnNavyMuted,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -112,11 +118,11 @@ class EmptyState extends StatelessWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: AppColors.surfaceMuted,
+                color: AppColors.greenLight,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: AppColors.accentTeal.withValues(alpha: 0.2)),
               ),
-              child: Icon(icon, size: 28, color: AppColors.textSecondary),
+              child: Icon(icon, size: 28, color: AppColors.accentTealHover),
             ),
             const SizedBox(height: 16),
             Text(
@@ -195,7 +201,7 @@ class ErrorState extends StatelessWidget {
               title,
               style: GoogleFonts.inter(
                 fontSize: 15,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
               textAlign: TextAlign.center,
@@ -297,7 +303,7 @@ class ConfirmationDialog extends StatelessWidget {
         title,
         style: GoogleFonts.inter(
           fontSize: 16,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
         ),
       ),
@@ -346,7 +352,7 @@ class ConfirmationDialog extends StatelessWidget {
             confirmLabel,
             style: GoogleFonts.inter(
               fontSize: 13,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: confirmTextColor ?? Colors.white,
             ),
           ),
@@ -356,7 +362,7 @@ class ConfirmationDialog extends StatelessWidget {
   }
 }
 
-/// Avatar Profil Pengguna dengan Inisial Institusional
+/// Avatar Profil Pengguna dengan Inisial Institusional (Fresh Green Tint)
 class ProfileAvatar extends StatelessWidget {
   final String name;
   final double size;
@@ -388,17 +394,17 @@ class ProfileAvatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: backgroundColor ?? AppColors.primaryNavy,
+        color: backgroundColor ?? AppColors.greenLight,
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.border, width: 1.2),
+        border: Border.all(color: AppColors.accentTeal.withValues(alpha: 0.3), width: 1.2),
       ),
       child: Center(
         child: Text(
           initials,
           style: GoogleFonts.inter(
             fontSize: size * 0.38,
-            fontWeight: FontWeight.w700,
-            color: textColor ?? Colors.white,
+            fontWeight: FontWeight.w600,
+            color: textColor ?? AppColors.accentTealHover,
           ),
         ),
       ),

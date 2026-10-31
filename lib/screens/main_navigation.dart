@@ -39,6 +39,7 @@ class _MainNavigationState extends State<MainNavigation> {
           border: Border(
             top: BorderSide(color: AppColors.border, width: 1),
           ),
+          boxShadow: AppColors.bottomNavShadow,
         ),
         child: SafeArea(
           child: Padding(
@@ -63,18 +64,13 @@ class _MainNavigationState extends State<MainNavigation> {
     final isSelected = _currentIndex == index;
     final hasNotif = index == 3;
 
-    return GestureDetector(
+    return InkWell(
       onTap: () => setState(() => _currentIndex = index),
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+      borderRadius: BorderRadius.circular(8),
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primaryNavy.withValues(alpha: 0.08)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -83,7 +79,7 @@ class _MainNavigationState extends State<MainNavigation> {
               children: [
                 Icon(
                   icon,
-                  color: isSelected ? AppColors.primaryNavy : AppColors.textMuted,
+                  color: isSelected ? AppColors.accentTealHover : AppColors.textSecondary,
                   size: 22,
                 ),
                 if (hasNotif)
@@ -106,8 +102,8 @@ class _MainNavigationState extends State<MainNavigation> {
               label,
               style: GoogleFonts.inter(
                 fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? AppColors.primaryNavy : AppColors.textMuted,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? AppColors.accentTealHover : AppColors.textSecondary,
               ),
             ),
           ],

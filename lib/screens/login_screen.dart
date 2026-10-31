@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../core/network/api_client.dart';
-import '../core/storage/session_storage.dart';
 import '../core/theme/app_theme.dart';
 import '../core/utils/helpers.dart';
 import '../services/auth_service.dart';
@@ -95,86 +93,6 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _isLoading = false);
       showAppSnackbar(context, 'Terjadi kesalahan saat masuk: $e', isError: true);
     }
-  }
-
-  void _showServerConfigDialog() async {
-    final currentUrl = await SessionStorage.getBaseUrl();
-    final urlController = TextEditingController(text: currentUrl);
-
-    if (!mounted) return;
-
-    showDialog(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: AppColors.border),
-        ),
-        title: Row(
-          children: [
-            const Icon(Icons.settings_ethernet_rounded, color: AppColors.primaryNavy),
-            const SizedBox(width: 8),
-            Text(
-              'Konfigurasi Server API',
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Ganti alamat server backend Laravel (IP LAN Wi-Fi / Host):',
-              style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 12),
-            InputField(
-              label: 'Base URL Backend',
-              controller: urlController,
-              hint: 'http://192.168.1.x:8000/api',
-              prefixIcon: const Icon(Icons.link_rounded, size: 18, color: AppColors.textSecondary),
-            ),
-          ],
-        ),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogCtx),
-            child: Text('Tutup', style: GoogleFonts.inter(color: AppColors.textSecondary)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accentTeal,
-              foregroundColor: AppColors.primaryNavy,
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () async {
-              final newUrl = urlController.text.trim();
-              if (newUrl.isNotEmpty) {
-                await SessionStorage.setBaseUrl(newUrl);
-                await ApiClient.instance.updateBaseUrl();
-                if (dialogCtx.mounted) Navigator.pop(dialogCtx);
-                if (mounted) {
-                  showAppSnackbar(context, 'Base URL berhasil disimpan ke: $newUrl');
-                }
-              }
-            },
-            child: Text(
-              'Simpan',
-              style: GoogleFonts.inter(fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -310,16 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Top Action: Pengaturan Server
-                Align(
-                  alignment: Alignment.topRight,
-                  child: IconButton(
-                    icon: const Icon(Icons.settings_ethernet_rounded, color: AppColors.textSecondary, size: 20),
-                    tooltip: 'Pengaturan Server API',
-                    onPressed: _showServerConfigDialog,
-                  ),
-                ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 12),
 
                 // Brand Header Mobile
                 Center(child: _buildBrandHeaderSmall()),
@@ -357,27 +266,27 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildBrandHeaderSmall() {
     return Column(
       children: [
-        Container(
-          width: 54,
-          height: 54,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(6),
+            child: Image.asset(
+              'assets/images/SMK_Negeri_1_Bantul_logo.png',
+              fit: BoxFit.contain,
+            ),
           ),
-          padding: const EdgeInsets.all(6),
-          child: Image.asset(
-            'assets/images/SMK_Negeri_1_Bantul_logo.png',
-            fit: BoxFit.contain,
-          ),
-        ),
         const SizedBox(height: 12),
         Text(
           'LKM Mitra Siswa Abadi',
@@ -476,7 +385,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.primaryNavy,
+                  color: AppColors.accentTealHover,
                 ),
               ),
             ),

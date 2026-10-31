@@ -8,6 +8,8 @@ import '../models/nasabah_model.dart';
 import '../models/transaksi_model.dart';
 import '../services/nasabah_api_service.dart';
 import '../widgets/common/app_cards.dart';
+import '../widgets/common/app_states.dart';
+import 'badges_screen.dart';
 import 'blokir_rekening_screen.dart';
 import 'financial_chart_screen.dart';
 import 'kartu_digital_screen.dart';
@@ -15,6 +17,11 @@ import 'mutasi_screen.dart';
 import 'saving_goals_screen.dart';
 import 'notifikasi_screen.dart';
 
+/// Halaman Dashboard Utama Nasabah Siswa (Unslopped & Craft-Focused)
+/// - One Bright Element: Kartu saldo hijau solid (#19C9A3) dengan tipografi tegas & no gradients.
+/// - Quiet Chrome: Navigasi dan permukaan kartu pendukung tenang, bersih, tanpa glow/dekorasi semu.
+/// - Spacing & Density: Standar grid 4px dengan ritme 16px konsisten di seluruh seksi.
+/// - Real Product Features: Akses langsung ke Target Simpanan, Mutasi Kas, Lencana Prestasi, dan Grafik Keuangan.
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -26,7 +33,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late NasabahModel _nasabah;
   bool _showBalance = true;
   List<TransaksiModel> _liveTransactions = [];
-  bool _isLoadingLive = false;
 
   @override
   void initState() {
@@ -47,7 +53,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _fetchLiveDashboardData() async {
     if (!mounted) return;
-    setState(() => _isLoadingLive = true);
     try {
       final profileRes = await NasabahApiService.getProfil();
       if (profileRes.data != null && mounted) {
@@ -62,12 +67,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _liveTransactions = riwayatRes.data!;
         });
       }
-    } catch (_) {
-    } finally {
-      if (mounted) {
-        setState(() => _isLoadingLive = false);
-      }
-    }
+    } catch (_) {}
   }
 
   @override
@@ -76,24 +76,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: RefreshIndicator(
-          color: AppColors.primaryNavy,
+          color: AppColors.accentTealHover,
           backgroundColor: AppColors.surface,
           onRefresh: _fetchLiveDashboardData,
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              // 1. App Bar Institusional
+              // 1. App Bar Institusional (Quiet Chrome)
               SliverToBoxAdapter(child: _buildHeader()),
 
-              // 2. Hero Balance Card (Navy)
+              // 2. Hero Balance Card (The One Bright Element - Solid Green, No Gradients)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                   child: _buildBalanceHero(),
                 ),
               ),
 
-              // 3. Pintasan Menu Utama (Aksi Cepat)
+              // 3. Layanan Siswa Terpadu (Complementary Services, No Duplication)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -101,7 +101,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
 
-              // 4. Ringkasan Pemasukan & Pengeluaran Bulan Ini
+              // 4. Ringkasan Arus Kas Bulan Ini (Cash Flow Ledger)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -109,10 +109,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
 
-              // 5. Riwayat 5 Transaksi Terbaru
+              // 5. Riwayat 5 Transaksi Terbaru (Recent Transactions)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                   child: _buildRecentTransactions(),
                 ),
               ),
@@ -120,7 +120,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // 6. Layanan Keamanan Darurat
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                   child: _buildEmergencySecurityTile(),
                 ),
               ),
@@ -132,70 +132,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // =========================================================================
-  // 1. HEADER INSTITUSIONAL DENGAN PROFIL SISWA
+  // 1. HEADER INSTITUSIONAL DENGAN PROFIL SISWA (QUIET CHROME)
   // =========================================================================
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: Row(
         children: [
-          // Avatar Inisial Institusional
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppColors.primaryNavy,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(
-              child: Text(
-                _nasabah.namaLengkap.isNotEmpty
-                    ? (_nasabah.namaLengkap.length >= 2
-                        ? _nasabah.namaLengkap.substring(0, 2).toUpperCase()
-                        : _nasabah.namaLengkap.toUpperCase())
-                    : 'NA',
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+          // Avatar Profil Siswa
+          ProfileAvatar(
+            name: _nasabah.namaLengkap,
+            size: 40,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   children: [
                     Text(
-                      'Selamat datang,',
+                      'Akun Siswa',
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w400,
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      _nasabah.kategori,
-                      style: GoogleFonts.inter(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.accentTealHover,
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.greenLight,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        _nasabah.kategori,
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.accentTealHover,
+                        ),
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 2),
                 Text(
                   _nasabah.namaLengkap,
                   style: GoogleFonts.inter(
                     fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -203,19 +195,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
-          // Refresh Icon
-          IconButton(
-            icon: _isLoadingLive
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryNavy),
-                  )
-                : const Icon(Icons.refresh_rounded, color: AppColors.textSecondary, size: 20),
-            tooltip: 'Segarkan Data',
-            onPressed: _isLoadingLive ? null : _fetchLiveDashboardData,
-          ),
-          // Notifikasi Icon
+          // Quiet Chrome: Ikon notifikasi bersih tanpa duplikasi tombol refresh manual
           IconButton(
             icon: const Icon(Icons.notifications_none_rounded, color: AppColors.textSecondary, size: 22),
             tooltip: 'Notifikasi',
@@ -229,7 +209,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // =========================================================================
-  // 2. HERO BALANCE CARD (NAVY RESMI INSTITUSI)
+  // 2. HERO BALANCE CARD (THE ONE BRIGHT ELEMENT - SOLID GREEN #19C9A3)
   // =========================================================================
   Widget _buildBalanceHero() {
     final saldoDapatDigunakan = (_nasabah.totalSaldo - _nasabah.saldoMengendap).clamp(0, double.infinity).toDouble();
@@ -237,21 +217,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.primaryNavy,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.secondaryNavy, width: 1.5),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
+        color: AppColors.accentTeal, // HIJAU SOLID PRIMARY LOGIN, TANPA GRADASI!
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.accentTealHover, width: 1.5),
+        boxShadow: AppColors.heroShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Card
+          // A. Header Kartu: Brand & Toggle Sembunyikan
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
             child: Row(
@@ -260,11 +234,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Row(
                   children: [
                     Container(
-                      width: 24,
-                      height: 24,
+                      width: 22,
+                      height: 22,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(5),
                       ),
                       padding: const EdgeInsets.all(2),
                       child: Image.asset(
@@ -277,9 +251,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       'LKM MITRA SISWA ABADI',
                       style: GoogleFonts.inter(
                         fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        letterSpacing: 0.8,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textOnGreen,
+                        letterSpacing: 0.6,
                       ),
                     ),
                   ],
@@ -287,9 +261,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 GestureDetector(
                   onTap: () => setState(() => _showBalance = !_showBalance),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: Colors.white.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
@@ -298,14 +272,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Icon(
                           _showBalance ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                           size: 13,
-                          color: AppColors.textOnNavyMuted,
+                          color: AppColors.textOnGreen,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           _showBalance ? 'Sembunyikan' : 'Tampilkan',
                           style: GoogleFonts.inter(
                             fontSize: 10,
-                            color: AppColors.textOnNavyMuted,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textOnGreen,
                           ),
                         ),
                       ],
@@ -316,11 +291,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
 
-          const Divider(color: Color(0xFF1E2D3D), height: 1),
+          Divider(color: Colors.white.withValues(alpha: 0.22), height: 1),
 
-          // Nominal Saldo
+          // B. Nominal Saldo & Detail Rekening
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -328,8 +303,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Total Saldo Tabungan',
-                      style: GoogleFonts.inter(fontSize: 11, color: AppColors.textOnNavyMuted),
+                      'Saldo Tabungan Siswa',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textOnGreen.withValues(alpha: 0.85),
+                      ),
                     ),
                     GestureDetector(
                       onTap: () {
@@ -343,11 +322,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             style: GoogleFonts.jetBrainsMono(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: AppColors.textOnGreen,
+                              letterSpacing: 0.5,
                             ),
                           ),
                           const SizedBox(width: 4),
-                          const Icon(Icons.copy_rounded, size: 12, color: AppColors.accentTeal),
+                          const Icon(Icons.copy_rounded, size: 11, color: AppColors.textOnGreen),
                         ],
                       ),
                     ),
@@ -358,8 +338,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   _showBalance ? formatRupiah(_nasabah.totalSaldo) : 'Rp ••••••••',
                   style: GoogleFonts.inter(
                     fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textOnGreen,
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -369,15 +349,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppColors.accentTeal.withValues(alpha: 0.15),
+                        color: Colors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        'Dapat digunakan: ${_showBalance ? formatRupiah(saldoDapatDigunakan) : "••••"}',
+                        'Dapat ditarik: ${_showBalance ? formatRupiah(saldoDapatDigunakan) : "••••"}',
                         style: GoogleFonts.inter(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.accentTeal,
+                          color: AppColors.textOnGreen,
                         ),
                       ),
                     ),
@@ -386,34 +366,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       '• Min. simpanan: ${formatRupiah(_nasabah.saldoMengendap)}',
                       style: GoogleFonts.inter(
                         fontSize: 10,
-                        color: AppColors.textOnNavyMuted,
+                        color: AppColors.textOnGreen.withValues(alpha: 0.75),
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                // Horizontal Pill Selector (Jenius Home Alt 1 Reference)
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildBalancePill('Saldo Aktif', isSelected: true, onTap: null),
+                      const SizedBox(width: 6),
+                      _buildBalancePill('Kartu Siswa', isSelected: false, onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const KartuDigitalScreen()));
+                      }),
+                      const SizedBox(width: 6),
+                      _buildBalancePill('Target Nabung', isSelected: false, onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const SavingGoalsScreen()));
+                      }),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
 
-          // Strip Aksi Cepat pada Kartu
+          // C. Strip Aksi Cepat pada Kartu (Jenius Segmented Action Reference)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: const BoxDecoration(
-              color: Color(0xFF142236),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(14),
-                bottomRight: Radius.circular(14),
-              ),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.16),
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(15),
+              bottomRight: Radius.circular(15),
+            ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildCardActionItem(Icons.receipt_long_rounded, 'Riwayat Mutasi', () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const MutasiScreen()));
-                }),
                 _buildCardActionItem(Icons.qr_code_rounded, 'QR Rekening', () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const KartuDigitalScreen()));
                 }),
+                Container(height: 16, width: 1, color: Colors.white.withValues(alpha: 0.25)),
+                _buildCardActionItem(Icons.receipt_long_rounded, 'Buku Mutasi', () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const MutasiScreen()));
+                }),
+                Container(height: 16, width: 1, color: Colors.white.withValues(alpha: 0.25)),
                 _buildCardActionItem(Icons.flag_rounded, 'Target Nabung', () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const SavingGoalsScreen()));
                 }),
@@ -425,6 +425,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Widget _buildBalancePill(String title, {required bool isSelected, VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.textOnGreen : AppColors.textOnGreen.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          title,
+          style: GoogleFonts.inter(
+            fontSize: 10,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected ? AppColors.accentTealHover : AppColors.textOnGreen,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCardActionItem(IconData icon, String label, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
@@ -432,15 +453,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 15, color: AppColors.accentTeal),
+            Icon(icon, size: 15, color: AppColors.textOnGreen),
             const SizedBox(width: 6),
             Text(
               label,
               style: GoogleFonts.inter(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: AppColors.textOnGreen,
               ),
             ),
           ],
@@ -450,17 +472,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // =========================================================================
-  // 3. PINTASAN MENU UTAMA (AKSI CEPAT SISWA)
+  // 3. LAYANAN SISWA TERPADU (COMPLEMENTARY SERVICES, TANPA DUPLIKASI)
   // =========================================================================
   Widget _buildQuickActions() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Layanan Perbankan',
+          'Layanan Perbankan Siswa',
           style: GoogleFonts.inter(
             fontSize: 13,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
@@ -469,36 +491,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Expanded(
               child: _buildActionTile(
-                icon: Icons.savings_rounded,
-                title: 'Target\nNabung',
-                color: AppColors.primaryNavy,
+                icon: Icons.savings_outlined,
+                title: 'Target Tabungan',
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavingGoalsScreen())),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: _buildActionTile(
-                icon: Icons.receipt_long_rounded,
-                title: 'Buku\nMutasi',
-                color: const Color(0xFF1E3A8A),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MutasiScreen())),
+                icon: Icons.military_tech_outlined,
+                title: 'Lencana Prestasi',
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BadgesScreen())),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: _buildActionTile(
-                icon: Icons.credit_card_rounded,
-                title: 'Kartu\nPelajar',
-                color: const Color(0xFF0D9488),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const KartuDigitalScreen())),
+                icon: Icons.insights_outlined,
+                title: 'Grafik Keuangan',
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FinancialChartScreen())),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: _buildActionTile(
-                icon: Icons.support_agent_rounded,
-                title: 'Bantuan\nAdmin WA',
-                color: const Color(0xFF16A36A),
+                icon: Icons.support_agent_outlined,
+                title: 'Bantuan Siswa',
                 onTap: () => openWhatsAppAdmin(context: context),
               ),
             ),
@@ -511,31 +529,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildActionTile({
     required IconData icon,
     required String title,
-    required Color color,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.border),
+          boxShadow: AppColors.cardShadow,
         ),
         child: Column(
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: AppColors.surfaceMuted,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.border),
               ),
-              child: Icon(icon, color: color, size: 18),
+              child: Icon(icon, color: AppColors.accentTealHover, size: 19),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               title,
               textAlign: TextAlign.center,
@@ -543,8 +562,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
-                height: 1.25,
+                height: 1.2,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -553,7 +574,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // =========================================================================
-  // 4. RINGKASAN ARUS KAS BULAN INI (DIHITUNG DARI DATA TRANSAKSI NYATA)
+  // 4. RINGKASAN ARUS KAS BULAN INI (CASH FLOW LEDGER)
   // =========================================================================
   Widget _buildCashFlowSummary() {
     double totalSetoran = 0;
@@ -568,11 +589,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -582,7 +604,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               Text(
                 'Arus Kas Bulan Ini',
-                style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
               InkWell(
                 onTap: () {
@@ -590,22 +616,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },
                 child: Row(
                   children: [
-                    Text('Lihat Grafik', style: GoogleFonts.inter(fontSize: 11, color: AppColors.primaryNavy, fontWeight: FontWeight.w600)),
-                    const Icon(Icons.chevron_right_rounded, size: 14, color: AppColors.primaryNavy),
+                    Text(
+                      'Lihat Grafik',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AppColors.accentTealHover,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right_rounded, size: 14, color: AppColors.accentTealHover),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceMuted,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
@@ -615,13 +648,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         children: [
                           const Icon(Icons.arrow_downward_rounded, size: 14, color: AppColors.success),
                           const SizedBox(width: 4),
-                          Text('Total Setoran (+)', style: GoogleFonts.inter(fontSize: 10, color: AppColors.textSecondary)),
+                          Text(
+                            'Total Setoran (+)',
+                            style: GoogleFonts.inter(fontSize: 10, color: AppColors.textSecondary),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       Text(
                         formatRupiah(totalSetoran),
-                        style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.success),
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.success,
+                        ),
                       ),
                     ],
                   ),
@@ -630,10 +670,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceMuted,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
@@ -643,13 +683,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         children: [
                           const Icon(Icons.arrow_upward_rounded, size: 14, color: AppColors.danger),
                           const SizedBox(width: 4),
-                          Text('Total Penarikan (-)', style: GoogleFonts.inter(fontSize: 10, color: AppColors.textSecondary)),
+                          Text(
+                            'Total Penarikan (-)',
+                            style: GoogleFonts.inter(fontSize: 10, color: AppColors.textSecondary),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       Text(
                         formatRupiah(totalPenarikan),
-                        style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.danger),
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.danger,
+                        ),
                       ),
                     ],
                   ),
@@ -678,7 +725,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               'Mutasi Terakhir',
               style: GoogleFonts.inter(
                 fontSize: 13,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -691,7 +738,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.primaryNavy,
+                  color: AppColors.accentTealHover,
                 ),
               ),
             ),
@@ -700,11 +747,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         const SizedBox(height: 10),
         if (recent.isEmpty)
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.border),
+              boxShadow: AppColors.cardShadow,
             ),
             child: Center(
               child: Column(
@@ -712,12 +761,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const Icon(Icons.receipt_long_outlined, size: 36, color: AppColors.textMuted),
                   const SizedBox(height: 8),
                   Text(
-                    'Belum ada transaksi tercatat.',
-                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                    'Belum ada transaksi tercatat',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Seluruh setoran atau penarikan yang Anda lakukan di loket Bank Mini akan tercatat di sini.',
+                    'Setoran atau penarikan yang dilakukan di loket Bank Mini akan tercatat di sini',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(fontSize: 11, color: AppColors.textSecondary),
                   ),
@@ -756,25 +809,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
       onTap: () {
         Navigator.push(context, MaterialPageRoute(builder: (_) => const BlokirRekeningScreen()));
       },
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: AppColors.border),
+          boxShadow: AppColors.cardShadow,
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
-                color: AppColors.danger.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
+                color: AppColors.dangerBg,
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.shield_outlined, color: AppColors.danger, size: 16),
+              child: const Icon(Icons.shield_outlined, color: AppColors.danger, size: 18),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -782,11 +836,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Text(
                     'Pusat Keamanan & Pemblokiran Darurat',
                     style: GoogleFonts.inter(
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: AppColors.danger,
                     ),
                   ),
+                  const SizedBox(height: 1),
                   Text(
                     'Bekukan rekening sementara jika kartu atau perangkat hilang',
                     style: GoogleFonts.inter(fontSize: 10, color: AppColors.textSecondary),
@@ -794,7 +849,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 16),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 18),
           ],
         ),
       ),

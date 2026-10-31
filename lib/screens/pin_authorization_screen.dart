@@ -117,7 +117,7 @@ class _PinAuthorizationScreenState extends State<PinAuthorizationScreen>
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.backgroundCard,
+        backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
@@ -126,7 +126,7 @@ class _PinAuthorizationScreenState extends State<PinAuthorizationScreen>
             const SizedBox(width: 8),
             Text(
               'Peringatan Keamanan',
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
@@ -181,10 +181,10 @@ class _PinAuthorizationScreenState extends State<PinAuthorizationScreen>
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: const BoxDecoration(
-          color: AppColors.backgroundCard,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           border: Border(
-            top: BorderSide(color: AppColors.primaryTeal, width: 2),
+            top: BorderSide(color: AppColors.accentTealHover, width: 2),
           ),
         ),
         child: Column(
@@ -379,7 +379,7 @@ class _PinAuthorizationScreenState extends State<PinAuthorizationScreen>
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryNavy.withValues(alpha: 0.08),
+                            color: AppColors.greenLight,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(
@@ -483,10 +483,10 @@ class _PinAuthorizationScreenState extends State<PinAuthorizationScreen>
                                   margin: const EdgeInsets.symmetric(horizontal: 3),
                                   padding: const EdgeInsets.symmetric(vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: isSelected ? AppColors.primaryNavy : AppColors.surfaceMuted,
+                                    color: isSelected ? AppColors.greenLight : AppColors.surfaceMuted,
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: isSelected ? AppColors.primaryNavy : AppColors.border,
+                                      color: isSelected ? AppColors.accentTealHover : AppColors.border,
                                     ),
                                   ),
                                   alignment: Alignment.center,
@@ -540,9 +540,9 @@ class _PinAuthorizationScreenState extends State<PinAuthorizationScreen>
                               height: 14,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: isFilled ? AppColors.primaryNavy : Colors.transparent,
+                                color: isFilled ? AppColors.accentTealHover : Colors.transparent,
                                 border: Border.all(
-                                  color: isFilled ? AppColors.primaryNavy : AppColors.border,
+                                  color: isFilled ? AppColors.accentTealHover : AppColors.border,
                                   width: 1.8,
                                 ),
                               ),
