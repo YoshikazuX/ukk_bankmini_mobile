@@ -10,6 +10,7 @@ class SessionStorage {
   static const String _keyRole = 'user_active_role';
   static const String _keyUserData = 'user_profile_json';
   static const String _keyCustomBaseUrl = 'app_custom_base_url';
+  static const String _keyOnboardingCompleted = 'app_onboarding_completed';
 
   static SharedPreferences? _prefs;
   static NasabahModel? _cachedNasabah;
@@ -151,7 +152,23 @@ class SessionStorage {
   }
 
   // =========================================================================
-  // 5. LOGOUT & BERSIHKAN SESI
+  // 5. STATUS ONBOARDING
+  // =========================================================================
+
+  /// Cek apakah pengguna telah menyelesaikan layar onboarding
+  static Future<bool> isOnboardingCompleted() async {
+    final prefs = await _getPrefs();
+    return prefs.getBool(_keyOnboardingCompleted) ?? false;
+  }
+
+  /// Simpan status penyelesaian onboarding
+  static Future<void> setOnboardingCompleted({bool completed = true}) async {
+    final prefs = await _getPrefs();
+    await prefs.setBool(_keyOnboardingCompleted, completed);
+  }
+
+  // =========================================================================
+  // 6. LOGOUT & BERSIHKAN SESI
   // =========================================================================
 
   /// Hapus seluruh sesi login (Token, Role, User Data, Memory Cache)

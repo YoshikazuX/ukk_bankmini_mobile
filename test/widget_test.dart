@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ukk_bankmini/core/storage/session_storage.dart';
 import 'package:ukk_bankmini/main.dart';
 import 'package:ukk_bankmini/models/badge_model.dart';
 import 'package:ukk_bankmini/models/nasabah_model.dart';
@@ -9,7 +11,11 @@ import 'package:ukk_bankmini/models/session_model.dart';
 
 void main() {
   setUpAll(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
     GoogleFonts.config.allowRuntimeFetching = false;
+    SharedPreferences.setMockInitialValues({
+      'app_onboarding_completed': true,
+    });
   });
 
   group('Domain Model Fixtures & Calculations Test', () {
@@ -98,5 +104,69 @@ void main() {
     expect(find.text('Akun Resmi Admin (Laravel):'), findsNothing);
     expect(find.text('Nasabah / Siswa'), findsNothing);
     expect(find.text('Petugas / Staff'), findsNothing);
+  });
+
+  testWidgets('SplashScreen renders institutional branding and SMK N 1 Bantul identity',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    await tester.pumpWidget(const LkmBankMiniApp());
+    // Pump first frame before splash delay completes
+    await tester.pump();
+
+    expect(find.text('LKM Mitra Siswa Abadi'), findsOneWidget);
+    expect(find.text('Sistem Informasi Bank Mini Sekolah'), findsOneWidget);
+    expect(find.text('SMK NEGERI 1 BANTUL'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    // Settle splash screen transition to LoginScreen
+    await tester.pumpAndSettle();
+    expect(find.text('Masuk ke Dashboard'), findsOneWidget);
+  });
+
+  testWidgets(
+      'OnboardingScreen renders slides, handles navigation, and completes to LoginScreen',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    await tester.pumpWidget(const LkmBankMiniApp(initialRoute: '/onboarding'));
+    await tester.pumpAndSettle();
+
+    // Verifikasi Slide 1
+    expect(find.text('PERBANKAN SISWA TERPADU'), findsOneWidget);
+    expect(find.text('Tabungan Sekolah Aman & Transparan'), findsOneWidget);
+    expect(find.text('Buku mutasi transaksi otomatis & tercatat'), findsOneWidget);
+    expect(find.text('Lewati'), findsWidgets);
+    expect(find.text('Lanjut'), findsOneWidget);
+
+    // Ketuk tombol Lanjut untuk pindah ke Slide 2
+    await tester.tap(find.text('Lanjut'));
+    await tester.pumpAndSettle();
+
+    // Verifikasi Slide 2
+    expect(find.text('KARTU DIGITAL & KEAMANAN'), findsOneWidget);
+    expect(find.text('Identitas Kartu Digital & PIN Otorisasi'), findsOneWidget);
+    expect(find.text('PIN 6-digit untuk persetujuan penarikan loket'), findsOneWidget);
+
+    // Ketuk tombol Lanjut untuk pindah ke Slide 3
+    await tester.tap(find.text('Lanjut'));
+    await tester.pumpAndSettle();
+
+    // Verifikasi Slide 3
+    expect(find.text('LITERASI FINANSIAL & PRESTASI'), findsOneWidget);
+    expect(find.text('Rencanakan Impian dengan Saving Goals'), findsOneWidget);
+    expect(find.text('Mulai Sekarang — Masuk ke Akun'), findsOneWidget);
+
+    // Selesaikan onboarding
+    await tester.tap(find.text('Mulai Sekarang — Masuk ke Akun'));
+    await tester.pumpAndSettle();
+
+    // Verifikasi telah berhasil berpindah ke LoginScreen
+    expect(find.text('Masuk ke Dashboard'), findsOneWidget);
+    expect(await SessionStorage.isOnboardingCompleted(), isTrue);
   });
 }

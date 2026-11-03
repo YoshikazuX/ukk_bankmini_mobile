@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'core/theme/app_theme.dart';
+import 'screens/splash_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_navigation.dart';
 import 'screens/kartu_digital_screen.dart';
@@ -36,32 +38,48 @@ void main() {
 }
 
 class LkmBankMiniApp extends StatelessWidget {
-  const LkmBankMiniApp({super.key});
+  final String initialRoute;
+
+  const LkmBankMiniApp({
+    super.key,
+    this.initialRoute = '/',
+  });
 
   @override
   Widget build(BuildContext context) {
+    final routes = <String, WidgetBuilder>{
+      '/': (context) => const SplashScreen(),
+      '/splash': (context) => const SplashScreen(),
+      '/onboarding': (context) => const OnboardingScreen(),
+      '/login': (context) => const LoginScreen(),
+      '/home': (context) => const MainNavigation(),
+      '/kartu': (context) => const KartuDigitalScreen(),
+      '/mutasi': (context) => const MutasiScreen(),
+      '/notifikasi': (context) => const NotifikasiScreen(),
+      '/blokir': (context) => const BlokirRekeningScreen(),
+      '/goals': (context) => const SavingGoalsScreen(),
+      '/badges': (context) => const BadgesScreen(),
+      '/session': (context) => const SessionLogScreen(),
+      '/help': (context) => const HelpCenterScreen(),
+      '/chart': (context) => const FinancialChartScreen(),
+      '/pin_auth': (context) => const PinAuthorizationScreen(),
+      '/teller': (context) => const TellerMainScreen(),
+      '/supervisor': (context) => const SupervisorMainScreen(),
+      '/admin': (context) => const AdminMainScreen(),
+    };
+
     return MaterialApp(
       title: 'LKM Mitra Siswa Abadi',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: '/login',
-      routes: {
-        '/login': (context) => const LoginScreen(),
-        '/home': (context) => const MainNavigation(),
-        '/kartu': (context) => const KartuDigitalScreen(),
-        '/mutasi': (context) => const MutasiScreen(),
-        '/notifikasi': (context) => const NotifikasiScreen(),
-        '/blokir': (context) => const BlokirRekeningScreen(),
-        '/goals': (context) => const SavingGoalsScreen(),
-        '/badges': (context) => const BadgesScreen(),
-        '/session': (context) => const SessionLogScreen(),
-        '/help': (context) => const HelpCenterScreen(),
-        '/chart': (context) => const FinancialChartScreen(),
-        '/pin_auth': (context) => const PinAuthorizationScreen(),
-        '/teller': (context) => const TellerMainScreen(),
-        '/supervisor': (context) => const SupervisorMainScreen(),
-        '/admin': (context) => const AdminMainScreen(),
-      },
+      initialRoute: initialRoute,
+      onGenerateInitialRoutes: (routeName) => [
+        MaterialPageRoute(
+          builder: (context) => (routes[routeName] ?? routes['/']!)(context),
+          settings: RouteSettings(name: routeName),
+        ),
+      ],
+      routes: routes,
     );
   }
 }

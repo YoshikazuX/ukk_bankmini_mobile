@@ -448,7 +448,7 @@ class _PinAuthorizationScreenState extends State<PinAuthorizationScreen>
                                 'Loket Kasir',
                                 style: GoogleFonts.inter(
                                   fontSize: 10,
-                                  color: AppColors.primaryNavy,
+                                  color: AppColors.textSecondary,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -495,7 +495,7 @@ class _PinAuthorizationScreenState extends State<PinAuthorizationScreen>
                                     style: GoogleFonts.inter(
                                       fontSize: 11,
                                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                      color: isSelected ? Colors.white : AppColors.textPrimary,
+                                      color: isSelected ? AppColors.accentTealHover : AppColors.textPrimary,
                                     ),
                                   ),
                                 ),
@@ -585,21 +585,7 @@ class _PinAuthorizationScreenState extends State<PinAuthorizationScreen>
                       textAlign: TextAlign.center,
                     )
                   else
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Text(
-                        'PIN Resmi Uji: 240808',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
+                    const SizedBox(height: 16),
                 ],
               ),
             ),
