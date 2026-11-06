@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart'; // for kReleaseMode
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../models/nasabah_model.dart';
 import '../../models/petugas_model.dart';
 import '../constants/api_constants.dart';
@@ -113,8 +115,7 @@ class SessionStorage {
   }
 
   /// Alias untuk saveCachedNasabah
-  static Future<void> saveNasabah(NasabahModel nasabah) async =>
-      saveCachedNasabah(nasabah);
+  static Future<void> saveNasabah(NasabahModel nasabah) async => saveCachedNasabah(nasabah);
 
   /// Simpan profil Petugas ke memory cache dan persistent storage
   static Future<void> saveCachedPetugas(PetugasModel petugas) async {
@@ -126,7 +127,7 @@ class SessionStorage {
   // 4. KONFIGURASI DINAMIS BASE URL API
   // =========================================================================
 
-  /// Simpan Base URL custom (misal jika testing IP Wi-Fi lokal HP fisik)
+  /// Simpan Base URL custom (misal jika testing IP Wi‑Fi lokal HP fisik)
   static Future<void> saveBaseUrl(String url) async {
     final prefs = await _getPrefs();
     await prefs.setString(_keyCustomBaseUrl, url.trim());
@@ -137,6 +138,9 @@ class SessionStorage {
 
   /// Ambil Base URL aktif
   static Future<String> getBaseUrl() async {
+    // In release builds we force the production base URL, ignoring any custom URL stored locally.
+    // This prevents a stale development URL from being used after a fresh install of the production app.
+    if (kReleaseMode) return ApiConstants.defaultBaseUrl;
     final prefs = await _getPrefs();
     final customUrl = prefs.getString(_keyCustomBaseUrl);
     if (customUrl != null && customUrl.trim().isNotEmpty) {

@@ -1,13 +1,29 @@
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 
 /// Konstanta Rute & Konfigurasi URL API Backend Bank Mini Sekolah
 class ApiConstants {
   // Port default artisan serve / server laravel
   static const int defaultPort = 8000;
 
-  /// Default Base URL yang otomatis mendeteksi platform
+  // Production URL (HTTPS)
+  static const String _productionBaseUrl = 'https://hanbank.my.id/api';
+
+  /// Default Base URL yang otomatis mendeteksi platform.
+  ///
+  /// - Pada **release** (kReleaseMode) akan mengembalikan URL production
+  ///   kecuali nilai `BASE_URL` diberikan melalui `--dart-define`.
+  /// - Pada **debug** (development) tetap memakai emulator / localhost
+  ///   sebagaimana sebelumnya, agar developer dapat menjalankan API lokal.
   static String get defaultBaseUrl {
+    // 1. Prioritas tinggi: nilai yang diberikan lewat --dart-define
+    const custom = String.fromEnvironment('BASE_URL');
+    if (custom.isNotEmpty) return custom;
+
+    // 2. Pada release, gunakan URL production secara default
+    if (kReleaseMode) return _productionBaseUrl;
+
+    // 3. Development fallback (web / emulator / desktop)
     if (kIsWeb) {
       return 'http://127.0.0.1:$defaultPort/api';
     }
