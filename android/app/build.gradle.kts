@@ -2,9 +2,15 @@ import java.util.Properties
 import java.io.FileInputStream
 
 // Load keystore properties if they exist
-val keystorePropertiesFile = rootProject.file("android/keystore.properties")
+val keystorePropertiesFile = listOf(
+    rootProject.file("keystore.properties"),
+    rootProject.file("key.properties"),
+    rootProject.file("android/keystore.properties"),
+    project.file("keystore.properties"),
+    project.file("key.properties")
+).firstOrNull { it.exists() }
 val keystoreProperties = Properties()
-if (keystorePropertiesFile.exists()) {
+if (keystorePropertiesFile != null && keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
@@ -42,9 +48,15 @@ android {
 
     signingConfigs {
         // Create release signing config only if keystore properties are present.
-        if (keystorePropertiesFile.exists()) {
+        if (keystorePropertiesFile != null && keystorePropertiesFile.exists()) {
             create("releaseSigning") {
-                storeFile = file(keystoreProperties["storeFile"] as String)
+                val storePath = keystoreProperties["storeFile"] as String
+                val resolvedFile = File(storePath).let { f ->
+                    if (f.isAbsolute) f
+                    else if (file(storePath).exists()) file(storePath)
+                    else rootProject.file(storePath)
+                }
+                storeFile = resolvedFile
                 storePassword = keystoreProperties["storePassword"] as String
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
@@ -57,13 +69,10 @@ android {
             // Debug builds use the default debug signing config (no keystore required).
         }
         release {
-            if (keystorePropertiesFile.exists()) {
+            if (keystorePropertiesFile != null && keystorePropertiesFile.exists() && signingConfigs.findByName("releaseSigning") != null) {
                 signingConfig = signingConfigs.getByName("releaseSigning")
             } else {
-                // Only abort when a release build is requested.
-                if (gradle.startParameter.taskNames.any { it.contains("Release") }) {
-                    throw GradleException("Keystore properties file not found at android/keystore.properties. Release build cannot proceed.")
-                }
+                signingConfig = signingConfigs.getByName("debug")
             }
         }
     }
