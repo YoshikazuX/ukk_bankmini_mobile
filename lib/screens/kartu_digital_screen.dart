@@ -82,8 +82,13 @@ class _KartuDigitalScreenState extends State<KartuDigitalScreen> {
   }
 
   String _formatCardNumber(String noRek) {
-    if (noRek.isEmpty || noRek == '-') return '••••  ••••  ••••';
-    final clean = noRek.replaceAll(' ', '');
+    if (noRek.isEmpty || noRek == '-') return '•••• •••• ••••';
+    final trimmed = noRek.trim();
+    // Jika format rekening sudah memiliki pemisah terstruktur resmi seperti '26-RPL-001' atau '26-TAB-001'
+    if (trimmed.contains('-') || trimmed.contains('/')) {
+      return trimmed;
+    }
+    final clean = trimmed.replaceAll(' ', '');
     if (clean.length == 9) {
       return '${clean.substring(0, 4)}  ${clean.substring(4)}';
     }

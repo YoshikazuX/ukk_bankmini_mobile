@@ -417,14 +417,32 @@ class NasabahApiService {
 
   /// Mengambil daftar target tabungan dari server Laravel
   static Future<ApiResponse<List<SavingGoalModel>>> getSavingGoals() async {
+    final res = await getSavingGoalsSummary();
+    if (res.success && res.data != null) {
+      return ApiResponse.success(data: res.data!.goals, message: res.message);
+    }
+    return ApiResponse.error(message: res.message, statusCode: res.statusCode);
+  }
+
+  /// Mengambil daftar target tabungan beserta ringkasan alokasi saldo
+  static Future<ApiResponse<SavingGoalsSummary>> getSavingGoalsSummary() async {
     try {
       final response = await _api.get(ApiConstants.nasabahGoals);
 
       if (response.success && response.data != null) {
         List<dynamic> rawList = [];
-        if (response.data is Map<String, dynamic> &&
-            response.data['data'] is List) {
-          rawList = response.data['data'];
+        double saldoRekening = 0.0;
+        double totalTeralokasi = 0.0;
+        double saldoTersedia = 0.0;
+
+        if (response.data is Map<String, dynamic>) {
+          final map = response.data as Map<String, dynamic>;
+          if (map['data'] is List) {
+            rawList = map['data'];
+          }
+          saldoRekening = (map['total_saldo_rekening'] as num?)?.toDouble() ?? 0.0;
+          totalTeralokasi = (map['total_teralokasi'] as num?)?.toDouble() ?? 0.0;
+          saldoTersedia = (map['saldo_tersedia'] as num?)?.toDouble() ?? 0.0;
         } else if (response.data is List) {
           rawList = response.data;
         }
@@ -452,13 +470,84 @@ class NasabahApiService {
           );
         }).toList();
 
-        return ApiResponse.success(data: list, message: response.message);
+        if (totalTeralokasi == 0.0 && list.isNotEmpty) {
+          totalTeralokasi = list.fold(0.0, (sum, g) => sum + g.currentAmount);
+        }
+        if (saldoRekening == 0.0) {
+          saldoRekening = SessionStorage.cachedNasabah?.totalSaldo ?? 0.0;
+        }
+        if (saldoTersedia == 0.0) {
+          saldoTersedia = (saldoRekening - totalTeralokasi).clamp(0.0, double.infinity);
+        }
+
+        return ApiResponse.success(
+          data: SavingGoalsSummary(
+            goals: list,
+            saldoRekening: saldoRekening,
+            totalTeralokasi: totalTeralokasi,
+            saldoTersedia: saldoTersedia,
+          ),
+          message: response.message,
+        );
       }
 
       return ApiResponse.error(
         message: response.message.isNotEmpty
             ? response.message
             : 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Server Bank Mini tidak dapat dihubungi. Periksa koneksi jaringan dan coba kembali.',
+      );
+    }
+  }
+
+  /// Mengalokasikan / menyisihkan dana dari saldo rekening ke target tabungan
+  static Future<ApiResponse<SavingGoalModel>> alokasikanDanaSavingGoal({
+    required String id,
+    required double nominal,
+    String mode = 'tambah',
+  }) async {
+    try {
+      final response = await _api.post(
+        ApiConstants.nasabahGoalAlokasi(id),
+        data: {
+          'nominal': nominal,
+          'mode': mode,
+        },
+      );
+
+      if (response.success && response.data != null) {
+        final Map<String, dynamic> m = response.data is Map<String, dynamic>
+            ? (response.data['data'] is Map<String, dynamic>
+                ? response.data['data']
+                : response.data)
+            : <String, dynamic>{};
+
+        DateTime? dl;
+        if (m['deadline'] != null) {
+          dl = DateTime.tryParse(m['deadline'].toString());
+        }
+
+        final goal = SavingGoalModel(
+          id: m['id']?.toString() ?? id,
+          nama: m['nama']?.toString() ?? '',
+          targetAmount: (m['target_amount'] as num?)?.toDouble() ?? 0.0,
+          currentAmount: (m['current_amount'] as num?)?.toDouble() ?? 0.0,
+          icon: m['icon']?.toString(),
+          deadline: dl,
+          isCompleted: m['is_completed'] == true,
+        );
+
+        return ApiResponse.success(data: goal, message: response.message);
+      }
+
+      return ApiResponse.error(
+        message: response.message.isNotEmpty
+            ? response.message
+            : 'Gagal menyisihkan dana ke target tabungan.',
         statusCode: response.statusCode,
       );
     } catch (e) {

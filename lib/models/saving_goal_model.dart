@@ -71,3 +71,18 @@ class SavingGoalModel {
     };
   }
 }
+
+/// Ringkasan status tabungan dan alokasi dana rekening siswa
+class SavingGoalsSummary {
+  final List<SavingGoalModel> goals;
+  final double saldoRekening;
+  final double totalTeralokasi;
+  final double saldoTersedia;
+
+  const SavingGoalsSummary({
+    required this.goals,
+    this.saldoRekening = 0.0,
+    this.totalTeralokasi = 0.0,
+    this.saldoTersedia = 0.0,
+  });
+}

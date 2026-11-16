@@ -587,15 +587,18 @@ class _TarikTunaiScreenState extends State<TarikTunaiScreen> {
                         Expanded(
                           child: TextField(
                             controller: _rekeningController,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            keyboardType: TextInputType.text,
+                            textCapitalization: TextCapitalization.characters,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\-]')),
+                            ],
                             style: GoogleFonts.jetBrainsMono(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Masukkan no. rekening',
+                              hintText: 'Contoh: 26-RPL-001',
                               hintStyle: GoogleFonts.inter(
                                 fontSize: 13,
                                 color: AppColors.textMuted,

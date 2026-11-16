@@ -11,6 +11,9 @@ class NasabahModel {
   final double totalSaldo;
   final double saldoMengendap; // Rp10.000
   final String? fotoProfil;
+
+  /// Alias getter untuk saldo
+  double get saldo => totalSaldo;
   final String? username;
   final String pinKeamanan;
   final DateTime createdAt;

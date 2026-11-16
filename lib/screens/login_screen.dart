@@ -335,7 +335,7 @@ class _LoginScreenState extends State<LoginScreen> {
         InputField(
           label: 'Username / NIS / No. Rekening',
           controller: _usernameController,
-          hint: 'Masukkan username, NIS, atau nomor rekening',
+          hint: 'Username, NIS, atau no. rekening (cth: 26-RPL-001)',
           prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: AppColors.textSecondary),
         ),
         const SizedBox(height: 14),

@@ -25,14 +25,14 @@ class ApiConstants {
 
     // 3. Development fallback (web / emulator / desktop)
     if (kIsWeb) {
-      return 'http://127.0.0.1:$defaultPort/api';
+      return 'https://hanbank.my.id/api';
     }
     if (Platform.isAndroid) {
       // 10.0.2.2 adalah alias localhost host machine pada Android Emulator
-      return 'http://10.0.2.2:$defaultPort/api';
+      return 'https://hanbank.my.id/api';
     }
     // Windows Desktop, macOS, iOS simulator
-    return 'http://127.0.0.1:$defaultPort/api';
+    return 'https://hanbank.my.id/api';
   }
 
   // =========================================================================
@@ -69,6 +69,7 @@ class ApiConstants {
   static const String nasabahSessions = '/nasabah/sessions';
   static const String nasabahGoals = '/nasabah/goals';
   static String nasabahGoalDetail(dynamic id) => '/nasabah/goals/$id';
+  static String nasabahGoalAlokasi(dynamic id) => '/nasabah/goals/$id/alokasi';
 
   // =========================================================================
   // 2B. PUSAT NOTIFIKASI UNIVERSAL (NASABAH & PETUGAS)

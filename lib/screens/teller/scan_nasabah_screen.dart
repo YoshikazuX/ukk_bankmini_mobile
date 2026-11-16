@@ -50,9 +50,9 @@ class _ScanNasabahScreenState extends State<ScanNasabahScreen> {
     setState(() => _isProcessing = true);
 
     // Parsing payload QR:
-    // Format 1: BANKMINI:REK:202601001:NIS:10293847:NAMA:Handa
-    // Format 2: BANKMINI|202601001|Handa|10293847
-    // Format 3: Rekening langsung, misal "202601001"
+    // Format 1: BANKMINI:REK:26-RPL-001:NIS:10293847:NAMA:Handa
+    // Format 2: BANKMINI|26-RPL-001|Handa|10293847
+    // Format 3: Rekening langsung, misal "26-RPL-001"
     String noRek = raw.trim();
 
     if (raw.contains('BANKMINI:REK:')) {
