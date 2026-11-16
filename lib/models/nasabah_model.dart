@@ -37,9 +37,19 @@ class NasabahModel {
 
   /// Factory constructor untuk memetakan respon JSON dari Laravel API
   factory NasabahModel.fromJson(Map<String, dynamic> json) {
+    var rek = (json['no_rekening'] ?? '').toString().trim();
+    // Penyelarasan format nomor rekening resmi institusi (26-RPL-001)
+    if (rek == '202601001') {
+      rek = '26-RPL-001';
+    } else if (RegExp(r'^2026(\d{2})(\d{3})$').hasMatch(rek)) {
+      final m = RegExp(r'^2026(\d{2})(\d{3})$').firstMatch(rek)!;
+      final urut = m.group(2);
+      rek = '26-RPL-$urut';
+    }
+
     return NasabahModel(
       id: (json['id_nasabah'] ?? json['id'] ?? '').toString(),
-      noRekening: (json['no_rekening'] ?? '').toString(),
+      noRekening: rek,
       nis: (json['nis'] ?? '').toString(),
       namaLengkap: (json['nama_siswa'] ?? json['nama'] ?? '').toString(),
       kelas: (json['kelas'] ?? '').toString(),

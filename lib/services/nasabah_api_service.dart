@@ -509,8 +509,10 @@ class NasabahApiService {
     required String id,
     required double nominal,
     String mode = 'tambah',
+    double? newTotalAmount,
   }) async {
     try {
+      // 1. Coba endpoint khusus alokasi baru
       final response = await _api.post(
         ApiConstants.nasabahGoalAlokasi(id),
         data: {
@@ -542,6 +544,46 @@ class NasabahApiService {
         );
 
         return ApiResponse.success(data: goal, message: response.message);
+      }
+
+      // 2. Fallback Kompatibilitas Otomatis:
+      // Jika server hosting production mengembalikan 404 (karena rute /alokasi belum diunggah/di-refresh di cPanel),
+      // otomatis gunakan endpoint update resmi yang sudah live di server: POST /nasabah/goals/{id}
+      if (response.statusCode == 404 && newTotalAmount != null) {
+        final fallbackResponse = await _api.post(
+          ApiConstants.nasabahGoalDetail(id),
+          data: {
+            'current_amount': newTotalAmount,
+          },
+        );
+
+        if (fallbackResponse.success && fallbackResponse.data != null) {
+          final Map<String, dynamic> m = fallbackResponse.data is Map<String, dynamic>
+              ? (fallbackResponse.data['data'] is Map<String, dynamic>
+                  ? fallbackResponse.data['data']
+                  : fallbackResponse.data)
+              : <String, dynamic>{};
+
+          DateTime? dl;
+          if (m['deadline'] != null) {
+            dl = DateTime.tryParse(m['deadline'].toString());
+          }
+
+          final goal = SavingGoalModel(
+            id: m['id']?.toString() ?? id,
+            nama: m['nama']?.toString() ?? '',
+            targetAmount: (m['target_amount'] as num?)?.toDouble() ?? 0.0,
+            currentAmount: (m['current_amount'] as num?)?.toDouble() ?? newTotalAmount,
+            icon: m['icon']?.toString(),
+            deadline: dl,
+            isCompleted: m['is_completed'] == true,
+          );
+
+          return ApiResponse.success(
+            data: goal,
+            message: 'Alokasi tabungan berhasil disimpan!',
+          );
+        }
       }
 
       return ApiResponse.error(

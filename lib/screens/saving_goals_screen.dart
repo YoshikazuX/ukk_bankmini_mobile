@@ -526,6 +526,7 @@ class _SavingGoalsScreenState extends State<SavingGoalsScreen> {
                               id: goal.id,
                               nominal: inputNominal,
                               mode: mode,
+                              newTotalAmount: estimatedGoal,
                             );
 
                             if (!mounted) return;
